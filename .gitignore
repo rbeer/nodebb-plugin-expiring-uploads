@@ -1,0 +1,7 @@
+*.log
+*.sublime-*
+THUMBS.db
+*.xcf
+node_modules/
+snaps/
+.atom-build.json

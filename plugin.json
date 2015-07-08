@@ -1,0 +1,14 @@
+{
+  "id": "nodebb-plugin-expiring-uploads",
+  "name": "Redirects uploads to a non-public location and exposes them via an expiring token.",
+  "description": "Redirects uploads to a non-public location and exposes them via an expiring token.",
+  "url": "https://github.com/rbeer/nodebb-plugin-",
+  "library": "./expups_be.js",
+  "staticDirs": {},
+  "hooks": [
+    { "hook": "filter:admin.header.build", "method": "Admin.addMenuItem" },
+    { "hook": "filter:uploadFile", "method": "handleUpload" },
+    { "hook": "static:app.load", "method": "init" }
+  ],
+  "scripts": []
+}
