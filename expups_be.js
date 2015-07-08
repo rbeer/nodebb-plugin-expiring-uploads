@@ -49,8 +49,8 @@ ExpiringUploads.init = function(app, cb) {
       // automatically exposed to the public (hence the name - maybe? ^_^)
       var pubTestPath = nconf.get('base_dir') + '/public';
       if (ExpiringUploads.storage.indexOf(pubTestPath) > -1) {
-        winston.error('[plugin:expiring-uplads] Upload directory is publicly ' +
-                      'accessible. Refusing to activate plugin!');
+        winston.error('[plugin:expiring-uploads] Upload directory is ' +
+                      'publicly accessible. Refusing to activate plugin!');
         return next(new Error('Public directory \'' + pubTestPath +
                               '\' not allowed as storage.'));
       }
@@ -67,13 +67,13 @@ ExpiringUploads.init = function(app, cb) {
             return next();
           } else {
             // unexpected error; scream panic back into the log ;)
-            winston.error('[plugin:expiring-uplads] Unexpected error while ' +
+            winston.error('[plugin:expiring-uploads] Unexpected error while ' +
                           'creating ' + absPath);
             return next(err);
           }
         }
-        winston.verbose('[plugin:expiring-uplads] Storage folder \'' + absPath +
-                        '\' not found. Created it.');
+        winston.warn('[plugin:expiring-uploads] Storage folder \'' +
+                        absPath + '\' not found. Created it.');
         next();
       });
     }],
