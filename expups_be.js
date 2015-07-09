@@ -4,6 +4,7 @@ var nconf = require.main.require('nconf');
 var winston = require.main.require('winston');
 var async = require.main.require('async');
 var db = require.main.require('./src/database');
+var utils = require.main.require('./public/src/utils');
 // used for standard upload functionality
 var meta = require.main.require('./src/meta');
 var validator = require.main.require('validator');
@@ -26,7 +27,7 @@ ExpiringUploads.init = function(app, cb) {
     function(next) {
       // get config or create if none found
       db.getObject('settings:expiring-uploads', function(err, config) {
-        if (err || !config) {
+        if (err || !config || !config.storage) {
           config = {
             storage: ExpiringUploads.storage,
             expireAfter: ExpiringUploads.expireAfter,
@@ -91,19 +92,23 @@ ExpiringUploads.handleUpload = function(data, cb) {
     var tstamp = Date.now();
     // only used for the link; all internals use the numeric tstamp
     var hexTstamp = tstamp.toString(16);
-    var filename = tstamp + '-' + validator.escape(data.file.name)
-                                  .substr(0, 255).toLowerCase();
+
+    var filename = data.file.name.split('.');
+    filename.forEach(function(name, idx) {
+      filename[idx] = utils.slugify(name);
+    });
+    filename = filename.join('.');
+    filename = validator.escape(filename).substr(0, 255);
     var imgData = {
+      fileName: tstamp + '-' + filename,
+      origName: data.file.name,
       tstamp: tstamp,
-      hexTstamp: hexTstamp,
-      expiration: tstamp + ExpiringUploads.expireAfter,
-      file: filename,
       hash: ExpiringUploads.getHash(data)
     };
 
     async.parallel({
       fs: function(next) {
-        ExpiringUploads.saveFile(data.file.path, imgData.file, next);
+        ExpiringUploads.saveFile(data.file.path, imgData.fileName, next);
       },
       db: function(next) {
         ExpiringUploads.writeToDB(imgData, next);
@@ -114,8 +119,8 @@ ExpiringUploads.handleUpload = function(data, cb) {
       }
       cb(null, {
         url: nconf.get('upload_url') + imgData.hash + '/' + hexTstamp +
-             '/' + data.file.name.toLowerCase(),
-        name: data.file.name.toLowerCase()
+             '/' + imgData.fileName.substring(14),
+        name: data.file.name
       });
     });
   } else {
@@ -213,23 +218,25 @@ ExpiringUploads.resolveRequest = function(req, res, cb) {
         return ExpiringUploads.sendGone(req, res);
       }
       // get upload info to perform checks
-      db.getObjectFields('expiring-uploads:' + id[0],
-                         ['hash', 'tstamp', 'file'], next);
+      db.getObject('expiring-uploads:' + id[0], next);
     }], function(err, fields) {
       if (err) {
         return cb(err);
       }
       var hashMatch = (fields.hash === hash);
       var timeMatch = (parseInt(fields.tstamp, 10) === tstamp);
-      var nameMatch = (fields.file === tstamp + '-' + fname);
+      var nameMatch = (fields.fileName === tstamp + '-' + fname);
       if (hashMatch && timeMatch && nameMatch) {
         res.status(200);
         // tell (not force! It's not part of the HTTP standard.) the browser
         // to download the file, even if it has a recognized/handled MIME.
+        // the 'filename' parameter tries to restore the original filename, as
+        // if it never had been slugified (which it has been in the url). :D
         // http://www.w3.org/Protocols/rfc2616/rfc2616-sec19.html#sec19.5.1
-        res.setHeader('Content-Disposition', 'attachement');
+        res.setHeader('Content-Disposition', 'attachement; filename="' +
+                                             fields.origName + '"');
         res.sendFile(nconf.get('base_dir') + ExpiringUploads.storage +
-                     fields.file);
+                     fields.fileName);
       }
     });
 };
