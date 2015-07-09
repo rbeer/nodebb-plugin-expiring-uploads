@@ -17,9 +17,7 @@ var ExpiringUploads = {
   // relative to nconf.get('base_dir')
   storage: '/expiring_uploads/',
   hiddenTypes: ['.zip', '.rar', '.txt', '.html'],
-  // 60*60*24 (= 24 hours)
-  // will be handled by admin UI
-  expireAfter: 86400
+  expireAfter: 1000 * 60 * 60 * 24 // 24 hours
 };
 ExpiringUploads.Admin = {};
 
@@ -109,12 +107,15 @@ ExpiringUploads.handleUpload = function(data, cb) {
 
   if (ExpiringUploads.hiddenTypes.indexOf(path.extname(data.file.name)) > -1) {
     var tstamp = Date.now();
+    // only used for the link; all internals use the numeric tstamp
     var hexTstamp = tstamp.toString(16);
+    var filename = tstamp + '-' +
+                   validator.escape(data.file.name).substr(0, 255);
     var imgData = {
       tstamp: tstamp,
       hexTstamp: hexTstamp,
       expiration: tstamp + ExpiringUploads.expireAfter,
-      safePath: ExpiringUploads.storage + tstamp + '_' + data.file.name,
+      safePath: ExpiringUploads.storage + filename,
       hash: ExpiringUploads.getHash(data)
     };
 
@@ -164,7 +165,8 @@ ExpiringUploads.doStandard = function(data, cb) {
   var filename = data.file.name || 'upload';
 
   filename = Date.now() + '-' + validator.escape(filename).substr(0, 255);
-  file.saveFileToLocal(filename, 'files', data.file.path, function(err, upload) {
+  file.saveFileToLocal(filename, 'files', data.file.path,
+                       function(err, upload) {
     if (err) {
       return cb(err);
     }
@@ -193,7 +195,7 @@ ExpiringUploads.writeToDB = function(imgData, cb) {
       db.incrObjectField('settings:expiring-uploads', 'lastID', next);
     },
     function(id, next) {
-      db.sortedSetAdd('expiring-uploads:ids', imgData.expiration, id, function() {
+      db.sortedSetAdd('expiring-uploads:ids', imgData.tstamp, id, function() {
         return next(null, id);
       });
     },
@@ -206,25 +208,61 @@ ExpiringUploads.writeToDB = function(imgData, cb) {
       return cb(err);
     }
   });
-
-  console.log('writeToDB');
-  console.log(imgData);
   return cb();
 };
 
 ExpiringUploads.resolveRequest = function(req, res, cb) {
   var hash = req.params.hash;
-  var tstamp = req.params.tstamp;
+  // timestamp comes in as hex string
+  var tstamp = parseInt('0x' + req.params.tstamp, 16);
   var fname = req.params.fname;
 
-  console.log('asked for');
-  console.log('hash: ' + hash);
-  console.log('tstamp: ' + tstamp);
-  console.log('filename: ' + fname);
+  // return when file (according to request url) is expired.
+  // the url could be wrong, but then it's up for grabs, anyway :)
+  if (Date.now() > tstamp + ExpiringUploads.expireAfter) {
+    console.log('expired @ url check');
+    return ExpiringUploads.sendGone();
+  }
+  async.waterfall([
+    function(next) {
+      // get ID of upload
+      db.getSortedSetRevRangeByScore('expiring-uploads:ids', 0, 1,
+                                     tstamp, tstamp, next);
+    },
+    function(id, next) {
+      if (id.length === 0) {
+        return ExpiringUploads.sendGone(req, res);
+      }
+      // get upload info to perform checks
+      db.getObjectFields('expiring-uploads:' + id[0],
+                         ['hash', 'tstamp', 'safePath'], next);
+    }], function(err, fields) {
+      if (err) {
+        return cb(err);
+      }
+      var hashMatch = (fields.hash === hash);
+      var timeMatch = (parseInt(fields.tstamp, 10) === tstamp);
+      var nameMatch = (path.basename(fields.safePath) === tstamp + '-' + fname);
+      if (hashMatch && timeMatch && nameMatch) {
+        res.status(200);
+        // tell (not force! It's not part of the HTTP standard.) the browser
+        // to download the file, even if it has a recognized/handled MIME.
+        // http://www.w3.org/Protocols/rfc2616/rfc2616-sec19.html#sec19.5.1
+        res.setHeader('Content-Disposition', 'attachement');
+        res.sendFile(nconf.get('base_dir') + fields.safePath);
+      }
+    });
 };
 
-ExpiringUploads.sendFile = function() {
-
+ExpiringUploads.sendGone = function(req, res) {
+  var mw = require.main.require('./src/middleware/middleware')(req.app);
+  // 410 Gone
+  // http://www.w3.org/Protocols/rfc2616/rfc2616-sec10.html#sec10.4.11
+  res.status(410);
+  mw.buildHeader(req, res, function() {
+    // add custom template
+    res.render('404', {path: res.path});
+  });
 };
 
 ExpiringUploads.Admin.addMenuItem = function(custom_header, cb) {
