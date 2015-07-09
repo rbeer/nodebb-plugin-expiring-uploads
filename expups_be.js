@@ -87,24 +87,6 @@ ExpiringUploads.init = function(app, cb) {
 };
 
 ExpiringUploads.handleUpload = function(data, cb) {
-  // data
-  // {
-  //   file: {
-  //     fieldName: 'files[]',
-  //     originalFilename: 'fish-common_2.1.2+dfsg1-1_all.deb',
-  //     path: '/tmp/25404-mjr1ur.deb',
-  //     headers: [Object],
-  //     ws: [Object],
-  //     size: 466926,
-  //     name: 'fish-common_2.1.2+dfsg1-1_all.deb',
-  //     type: 'application/x-deb'
-  //   },
-  //  uid: '1'
-  // }
-  //
-  // cb(err, {url, name})
-  // nconf.get('base_dir'); /var/nodeBB
-
   if (ExpiringUploads.hiddenTypes.indexOf(path.extname(data.file.name)) > -1) {
     var tstamp = Date.now();
     // only used for the link; all internals use the numeric tstamp
@@ -170,7 +152,6 @@ ExpiringUploads.doStandard = function(data, cb) {
     if (err) {
       return cb(err);
     }
-    console.log(upload.url);
     cb(null, {
 			url: nconf.get('relative_path') + upload.url,
       name: data.file.name
@@ -179,8 +160,6 @@ ExpiringUploads.doStandard = function(data, cb) {
 };
 
 ExpiringUploads.saveFile = function(src, dest, cb) {
-  console.log(src);
-  console.log(dest);
   var is = fs.createReadStream(src);
   var os = fs.createWriteStream(nconf.get('base_dir') + dest);
 
@@ -220,7 +199,6 @@ ExpiringUploads.resolveRequest = function(req, res, cb) {
   // return when file (according to request url) is expired.
   // the url could be wrong, but then it's up for grabs, anyway :)
   if (Date.now() > tstamp + ExpiringUploads.expireAfter) {
-    console.log('expired @ url check');
     return ExpiringUploads.sendGone();
   }
   async.waterfall([
