@@ -91,19 +91,19 @@ ExpiringUploads.handleUpload = function(data, cb) {
     var tstamp = Date.now();
     // only used for the link; all internals use the numeric tstamp
     var hexTstamp = tstamp.toString(16);
-    var filename = tstamp + '-' +
-                   validator.escape(data.file.name).substr(0, 255);
+    var filename = tstamp + '-' + validator.escape(data.file.name)
+                                  .substr(0, 255).toLowerCase();
     var imgData = {
       tstamp: tstamp,
       hexTstamp: hexTstamp,
       expiration: tstamp + ExpiringUploads.expireAfter,
-      safePath: ExpiringUploads.storage + filename,
+      file: filename,
       hash: ExpiringUploads.getHash(data)
     };
 
     async.parallel({
       fs: function(next) {
-        ExpiringUploads.saveFile(data.file.path, imgData.safePath, next);
+        ExpiringUploads.saveFile(data.file.path, imgData.file, next);
       },
       db: function(next) {
         ExpiringUploads.writeToDB(imgData, next);
@@ -114,8 +114,8 @@ ExpiringUploads.handleUpload = function(data, cb) {
       }
       cb(null, {
         url: nconf.get('upload_url') + imgData.hash + '/' + hexTstamp +
-             '/' + data.file.name,
-        name: data.file.name
+             '/' + data.file.name.toLowerCase(),
+        name: data.file.name.toLowerCase()
       });
     });
   } else {
@@ -161,7 +161,8 @@ ExpiringUploads.doStandard = function(data, cb) {
 
 ExpiringUploads.saveFile = function(src, dest, cb) {
   var is = fs.createReadStream(src);
-  var os = fs.createWriteStream(nconf.get('base_dir') + dest);
+  var os = fs.createWriteStream(nconf.get('base_dir') +
+                                ExpiringUploads.storage + dest);
 
   is.on('end', cb);
   os.on('error', cb);
@@ -213,21 +214,22 @@ ExpiringUploads.resolveRequest = function(req, res, cb) {
       }
       // get upload info to perform checks
       db.getObjectFields('expiring-uploads:' + id[0],
-                         ['hash', 'tstamp', 'safePath'], next);
+                         ['hash', 'tstamp', 'file'], next);
     }], function(err, fields) {
       if (err) {
         return cb(err);
       }
       var hashMatch = (fields.hash === hash);
       var timeMatch = (parseInt(fields.tstamp, 10) === tstamp);
-      var nameMatch = (path.basename(fields.safePath) === tstamp + '-' + fname);
+      var nameMatch = (fields.file === tstamp + '-' + fname);
       if (hashMatch && timeMatch && nameMatch) {
         res.status(200);
         // tell (not force! It's not part of the HTTP standard.) the browser
         // to download the file, even if it has a recognized/handled MIME.
         // http://www.w3.org/Protocols/rfc2616/rfc2616-sec19.html#sec19.5.1
         res.setHeader('Content-Disposition', 'attachement');
-        res.sendFile(nconf.get('base_dir') + fields.safePath);
+        res.sendFile(nconf.get('base_dir') + ExpiringUploads.storage +
+                     fields.file);
       }
     });
 };
