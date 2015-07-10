@@ -212,7 +212,7 @@ ExpiringUploads.resolveRequest = function(req, res, cb) {
   // return when file (according to request url) is expired.
   // the url could be wrong, but then it's up for grabs, anyway :)
   if (Date.now() > tstamp + ExpiringUploads.expireAfter) {
-    return ExpiringUploads.sendGone();
+    return ExpiringUploads.sendGone(req, res);
   }
   async.waterfall([
     function(next) {
@@ -255,7 +255,7 @@ ExpiringUploads.sendGone = function(req, res) {
   res.status(410);
   mw.buildHeader(req, res, function() {
     // add custom template
-    res.render('404', {path: res.path});
+    res.render('404', {path: req.path});
   });
 };
 
