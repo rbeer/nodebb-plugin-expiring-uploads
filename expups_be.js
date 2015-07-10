@@ -18,9 +18,10 @@ var ExpiringUploads = {
   // relative to nconf.get('base_dir')
   storage: '/expiring_uploads/',
   hiddenTypes: ['.zip', '.rar', '.txt', '.html'],
-  expireAfter: 1000 * 60 * 60 * 24 // 24 hours
+  expireAfter: 1000 * 60 * 60 * 24, // 24 hours
+  customTstamp: false
 };
-ExpiringUploads.Admin = {};
+ExpiringUploads.Admin = require('./expups_admin');
 
 ExpiringUploads.init = function(app, cb) {
   async.waterfall([
@@ -32,6 +33,7 @@ ExpiringUploads.init = function(app, cb) {
             storage: ExpiringUploads.storage,
             expireAfter: ExpiringUploads.expireAfter,
             hiddenTypes: ExpiringUploads.hiddenTypes,
+            customTstamp: ExpiringUploads.customTstamp,
             lastID: '0'
           };
           db.setObject('settings:expiring-uploads', config);
@@ -39,6 +41,7 @@ ExpiringUploads.init = function(app, cb) {
           ExpiringUploads.storage = config.storage;
           ExpiringUploads.expireAfter = parseInt(config.expireAfter, 10);
           ExpiringUploads.hiddenTypes = config.hiddenTypes.split(',');
+          ExpiringUploads.customTstamp = (config.customTstamp === 'true');
         }
         next();
       });
@@ -56,35 +59,39 @@ ExpiringUploads.init = function(app, cb) {
       next();
     },
     function(next) {
-      var absPath = nconf.get('base_dir') + ExpiringUploads.storage;
-      // create 'storage' directory
-      fs.mkdir(absPath, function(err) {
-        if (err) {
-          if (err.code === 'EEXIST') {
-            // if folder exists, we're good.
-            // could become a point to do some cleanup, though.
-            return next();
-          } else {
-            // unexpected error; scream panic back into the log ;)
-            winston.error('[plugin:expiring-uploads] Unexpected error while ' +
-                          'creating ' + absPath);
-            return next(err);
-          }
-        }
-        winston.warn('[plugin:expiring-uploads] Storage folder \'' +
-                        absPath + '\' not found. Created it.');
-        next();
-      });
-    }],
-    function(err) {
-      if (err) {
+      ExpiringUploads.createStorage(next);
+    }], function(err) {
+    if (err) {
+      return cb(err);
+    }
+    // route to catch file requests
+    app.router.get(nconf.get('upload_url') + ':hash/:tstamp/:fname',
+                   ExpiringUploads.resolveRequest);
+    // init admin
+    ExpiringUploads.Admin.init(app, cb);
+  });
+};
+
+ExpiringUploads.createStorage = function(cb) {
+  var absPath = nconf.get('base_dir') + ExpiringUploads.storage;
+  // create 'storage' directory
+  fs.mkdir(absPath, function(err) {
+    if (err) {
+      if (err.code === 'EEXIST') {
+        // if folder exists, we're good.
+        // could become a point to do some cleanup, though.
+        return cb();
+      } else {
+        // unexpected error; scream panic back into the log ;)
+        winston.error('[plugin:expiring-uploads] Unexpected error while ' +
+                      'creating ' + absPath);
         return cb(err);
       }
-      // setup route to catch file requests
-      app.router.get(nconf.get('upload_url') + ':hash/:tstamp/:fname',
-                     ExpiringUploads.resolveRequest);
-      cb(null, app);
-    });
+    }
+    winston.warn('[plugin:expiring-uploads] Storage folder \'' +
+                    absPath + '\' not found. Created it.');
+    cb();
+  });
 };
 
 ExpiringUploads.handleUpload = function(data, cb) {
@@ -250,15 +257,6 @@ ExpiringUploads.sendGone = function(req, res) {
     // add custom template
     res.render('404', {path: res.path});
   });
-};
-
-ExpiringUploads.Admin.addMenuItem = function(custom_header, cb) {
-  custom_header.plugins.push({
-    route: '/plugins/expups',
-    icon: 'fa-clock-o',
-    name: 'ExpiringUploads'
-  });
-  cb(null, custom_header);
 };
 
 module.exports = ExpiringUploads;

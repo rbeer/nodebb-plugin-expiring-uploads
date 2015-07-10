@@ -10,5 +10,6 @@
     { "hook": "filter:uploadFile", "method": "handleUpload" },
     { "hook": "static:app.load", "method": "init" }
   ],
-  "scripts": []
+  "scripts": [],
+  "templates": "./templates"
 }
