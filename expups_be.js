@@ -216,9 +216,15 @@ ExpiringUploads.resolveRequest = function(req, res, cb) {
   var tstamp = parseInt('0x' + req.params.tstamp, 16);
   var fname = req.params.fname;
 
+  // return when downloading files requires to be logged in
+  if (parseInt(meta.config.privateUploads, 10) === 1 && !req.user) {
+    // todo: create custom template/message
+    return ExpiringUploads.sendGone(req, res);
+  }
   // return when file (according to request url) is expired.
   // the url could be wrong, but then it's up for grabs, anyway :)
   if (Date.now() > tstamp + ExpiringUploads.expireAfter) {
+    // todo: create custom template/message
     return ExpiringUploads.sendGone(req, res);
   }
   async.waterfall([
@@ -261,7 +267,7 @@ ExpiringUploads.sendGone = function(req, res) {
   // http://www.w3.org/Protocols/rfc2616/rfc2616-sec10.html#sec10.4.11
   res.status(410);
   mw.buildHeader(req, res, function() {
-    // add custom template
+    // todo: did I mention to create a custom template for this? xD
     res.render('404', {path: req.path});
   });
 };
