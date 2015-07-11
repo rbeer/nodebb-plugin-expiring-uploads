@@ -5,11 +5,9 @@ var winston = require.main.require('winston');
 var async = require.main.require('async');
 var db = require.main.require('./src/database');
 var utils = require.main.require('./public/src/utils');
-// used for standard upload functionality
 var meta = require.main.require('./src/meta');
 var validator = require.main.require('validator');
 var file = require.main.require('./src/file');
-//
 var fs = require('fs');
 var path = require('path');
 var xxh = require('xxhash');
@@ -95,6 +93,9 @@ ExpiringUploads.createStorage = function(cb) {
 };
 
 ExpiringUploads.handleUpload = function(data, cb) {
+  if (!ExpiringUploads.checkPermissions(data, cb)) {
+    return;
+  }
   if (ExpiringUploads.hiddenTypes.indexOf(path.extname(data.file.name)) > -1) {
     var tstamp = Date.now();
     // only used for the link; all internals use the numeric tstamp
@@ -142,20 +143,26 @@ ExpiringUploads.getHash = function(imgData) {
   return xxh.hash(new Buffer(JSON.stringify(imgData)), key).toString(16);
 };
 
-ExpiringUploads.doStandard = function(data, cb) {
+ExpiringUploads.checkPermissions = function(data, cb) {
   if (parseInt(meta.config.allowFileUploads, 10) !== 1) {
-    return cb(new Error('[[error:uploads-are-disabled]]'));
+    cb(new Error('[[error:uploads-are-disabled]]'));
+    return false;
   }
 
   if (!data.file) {
-    return cb(new Error('[[error:invalid-file]]'));
+    cb(new Error('[[error:invalid-file]]'));
+    return false;
   }
 
   if (data.file.size > parseInt(meta.config.maximumFileSize, 10) * 1024) {
-    return cb(new Error('[[error:file-too-big, ' +
-                        meta.config.maximumFileSize + ']]'));
+    cb(new Error('[[error:file-too-big, ' +
+                 meta.config.maximumFileSize + ']]'));
+    return false;
   }
+  return true;
+};
 
+ExpiringUploads.doStandard = function(data, cb) {
   var filename = data.file.name || 'upload';
 
   filename = Date.now() + '-' + validator.escape(filename).substr(0, 255);
