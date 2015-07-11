@@ -1,6 +1,6 @@
 {
   "name": "nodebb-plugin-expiring-uploads",
-  "version": "0.1.0",
+  "version": "0.1.1",
   "description": "Redirects uploads to a non-public location and exposes them via an expiring token.",
   "author": {
     "name": "Raphael Beer",
