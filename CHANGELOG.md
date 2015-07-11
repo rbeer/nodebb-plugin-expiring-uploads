@@ -1,5 +1,6 @@
 ### 0.1.1
   - Recognizing ACP -> Settings -> Post -> "Make uploaded files private" and refusing to serve files to guests, if set.
+
 ### 0.1.0
   - Added ACP page.
     - Settings
