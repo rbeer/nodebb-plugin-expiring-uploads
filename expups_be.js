@@ -16,7 +16,7 @@ var ExpiringUploads = {
   // relative to nconf.get('base_dir')
   storage: '/expiring_uploads/',
   hiddenTypes: ['.zip', '.rar', '.txt', '.html'],
-  expireAfter: 1000 * 60 * 60 * 24, // 24 hours
+  expireAfter: 0, // 24 hours
   customTstamp: false
 };
 ExpiringUploads.Admin = require('./expups_admin');
@@ -223,7 +223,8 @@ ExpiringUploads.resolveRequest = function(req, res, cb) {
   }
   // return when file (according to request url) is expired.
   // the url could be wrong, but then it's up for grabs, anyway :)
-  if (Date.now() > tstamp + ExpiringUploads.expireAfter) {
+  if (ExpiringUploads.expireAfter !== 0 &&
+      Date.now() > tstamp + ExpiringUploads.expireAfter) {
     // todo: create custom template/message
     return ExpiringUploads.sendGone(req, res);
   }
@@ -257,6 +258,8 @@ ExpiringUploads.resolveRequest = function(req, res, cb) {
                                              fields.origName + '"');
         res.sendFile(nconf.get('base_dir') + ExpiringUploads.storage +
                      fields.fileName);
+      } else {
+        ExpiringUploads.sendGone(req, res);
       }
     });
 };
