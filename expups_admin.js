@@ -57,7 +57,7 @@ Admin.saveSettings = function(req, res, next) {
     ExpiringUploads.storage = dbData.storage;
     ExpiringUploads.expireAfter = dbData.expireAfter;
     ExpiringUploads.hiddenTypes = dbData.hiddenTypes.split(',');
-    ExpiringUploads.customTstamp = (dbData.customTstamp === 'true');
+    ExpiringUploads.customTstamp = dbData.customTstamp;
     if (storageChange) {
       ExpiringUploads.createStorage(function(err) {
         if (err) {
