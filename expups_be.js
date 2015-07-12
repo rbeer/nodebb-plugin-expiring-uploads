@@ -11,6 +11,7 @@ var file = require.main.require('./src/file');
 var fs = require('fs');
 var path = require('path');
 var xxh = require('xxhash');
+var util = require('util');
 
 var ExpiringUploads = {
   // relative to nconf.get('base_dir')
@@ -219,14 +220,14 @@ ExpiringUploads.resolveRequest = function(req, res, cb) {
   // return when downloading files requires to be logged in
   if (parseInt(meta.config.privateUploads, 10) === 1 && !req.user) {
     // todo: create custom template/message
-    return ExpiringUploads.sendGone(req, res);
+    return ExpiringUploads.sendError(req, res, '403');
   }
   // return when file (according to request url) is expired.
   // the url could be wrong, but then it's up for grabs, anyway :)
   if (ExpiringUploads.expireAfter !== 0 &&
       Date.now() > tstamp + ExpiringUploads.expireAfter) {
     // todo: create custom template/message
-    return ExpiringUploads.sendGone(req, res);
+    return ExpiringUploads.sendError(req, res, '410');
   }
   async.waterfall([
     function(next) {
@@ -236,7 +237,7 @@ ExpiringUploads.resolveRequest = function(req, res, cb) {
     },
     function(id, next) {
       if (id.length === 0) {
-        return ExpiringUploads.sendGone(req, res);
+        return ExpiringUploads.sendError(req, res, '404');
       }
       // get upload info to perform checks
       db.getObject('expiring-uploads:' + id[0], next);
@@ -259,19 +260,18 @@ ExpiringUploads.resolveRequest = function(req, res, cb) {
         res.sendFile(nconf.get('base_dir') + ExpiringUploads.storage +
                      fields.fileName);
       } else {
-        ExpiringUploads.sendGone(req, res);
+        ExpiringUploads.sendError(req, res, '410');
       }
     });
 };
 
-ExpiringUploads.sendGone = function(req, res) {
+ExpiringUploads.sendError = function(req, res, errCode) {
   var mw = require.main.require('./src/middleware/middleware')(req.app);
-  // 410 Gone
-  // http://www.w3.org/Protocols/rfc2616/rfc2616-sec10.html#sec10.4.11
-  res.status(410);
+  // 403 Forbidden, 404 Not Found, 410 Gone
+  var tpl = (errCode === '404') ? '404' : 'expiring-uploads_' + errCode;
+  res.status(parseInt(errCode, 10));
   mw.buildHeader(req, res, function() {
-    // todo: did I mention to create a custom template for this? xD
-    res.render('404', {path: req.path});
+    res.render(tpl, {path: req.path});
   });
 };
 

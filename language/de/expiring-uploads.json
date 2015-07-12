@@ -1,0 +1,6 @@
+{
+  "410.title": "ist abgelaufen",
+  "410.message": "Du versuchst eine Datei herunter zu laden, die mit einem Verfallsdatum markiert wurde. Leider ist dieser Zeitpunkt bereits ueberschritten.",
+  "403.title": "Zugang Verweigert",
+  "403.message": "Bitte registriere/melde dich an, um diese Datei herunterzuladen!"
+}

@@ -11,5 +11,6 @@
     { "hook": "static:app.load", "method": "init" }
   ],
   "scripts": [],
+  "languages": "./language",
   "templates": "./templates"
 }

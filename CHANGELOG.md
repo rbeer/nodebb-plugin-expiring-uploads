@@ -1,4 +1,6 @@
 ### 0.1.2
+  - ADDED: Languages de, en_GB, en_US
+  - ADDED: Seperate error messages for 403, 404, 410
   - FIX: ACP not showing custom timestamp correctly (@e6bff6e)
   - FIX: ACP not showing confirmation, when storage path not changed. (@b58a352)
 
