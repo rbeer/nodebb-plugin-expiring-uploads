@@ -2,7 +2,7 @@
 ### Hide and expire users uploads.
 The name actually only tells half the story. This plugin lets you:
 
-1. Hide uploads of definable filetypes behind a hash/timestamp/filename combination. Uploads are not stored in the standard path (public/files). This ensures, that even when the filename is known, it's pretty hard to guess its location.
+1. Hide uploads of definable filetypes behind a hash/timestamp/filename combination. Uploads are not stored in the standard path (public/uploads). This ensures, that even when the filename is known, it's pretty hard to guess its location.
 
 2. Set an expiration time(range) for those hash/timestamp/filename urls. Every setting > 0 will have uploads handled by this plugin expire.
 
