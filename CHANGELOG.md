@@ -1,3 +1,6 @@
+### 0.1.2
+  - FIX: ACP not showing confirmation, when storage path not changed.
+
 ### 0.1.1
   - Recognizing ACP -> Settings -> Post -> "Make uploaded files private" and refusing to serve files to guests, if set.
 

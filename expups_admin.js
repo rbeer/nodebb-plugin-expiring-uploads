@@ -65,6 +65,8 @@ Admin.saveSettings = function(req, res, next) {
         }
         res.json('OK');
       });
+    } else {
+      res.json('OK');
     }
   });
 };
