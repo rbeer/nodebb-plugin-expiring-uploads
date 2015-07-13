@@ -56,7 +56,7 @@
                   Custom
                 </label>
               </div>
-              <input type="number" class="form-control" id="expTstamp" value="{expTstamp}"<!-- IF !customTstamp --> disabled<!-- ENDIF !customTstamp -->/>
+              <input type="number" class="form-control" id="expTstamp" value="{expTstamp}" min="0"<!-- IF !customTstamp --> disabled<!-- ENDIF !customTstamp -->/>
               <span class="input-group-addon">seconds</span>
             </div>
           </div>
