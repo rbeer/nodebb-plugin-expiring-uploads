@@ -50,10 +50,12 @@
               </select>
             </div><br />
             <div class="input-group">
-              <span class="input-group-addon">
-                <input type="checkbox" id="chkCustomTstamp"<!-- IF customTstamp --> checked<!-- ENDIF customTstamp -->>
-                <label for="chkCustomTstamp">Custom</label>
-              </span>
+              <div class="input-group-addon">
+                <label for="chkCustomTstamp">
+                  <input type="checkbox" id="chkCustomTstamp"<!-- IF customTstamp --> checked<!-- ENDIF customTstamp -->>
+                Custom
+                </label>
+              </div>
               <input type="number" class="form-control" id="expTstamp" value="{expTstamp}"<!-- IF !customTstamp --> disabled<!-- ENDIF !customTstamp -->/>
               <span class="input-group-addon">seconds</span>
             </div>

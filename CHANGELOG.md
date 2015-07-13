@@ -1,3 +1,6 @@
+### 0.2.1
+  - FIX: Automatic 'fa-toggle-on/off' requires checkbox to be nested in label
+
 ### 0.2.0
   - ADDED: Languages de, en_GB, en_US
   - ADDED: Seperate error messages for 403, 404, 410
