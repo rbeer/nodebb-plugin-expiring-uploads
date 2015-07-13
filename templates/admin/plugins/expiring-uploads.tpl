@@ -51,9 +51,9 @@
             </div><br />
             <div class="input-group">
               <div class="input-group-addon">
-                <label for="chkCustomTstamp">
+                <label for="chkCustomTstamp" style="margin-bottom: -1px;">
                   <input type="checkbox" id="chkCustomTstamp"<!-- IF customTstamp --> checked<!-- ENDIF customTstamp -->>
-                Custom
+                  Custom
                 </label>
               </div>
               <input type="number" class="form-control" id="expTstamp" value="{expTstamp}"<!-- IF !customTstamp --> disabled<!-- ENDIF !customTstamp -->/>
