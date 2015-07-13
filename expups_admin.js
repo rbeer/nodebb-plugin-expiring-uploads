@@ -23,7 +23,7 @@ Admin.addMenuItem = function(custom_header, cb) {
   cb(null, custom_header);
 };
 
-Admin.render = function(req, res, next) {
+Admin.render = function(req, res) {
   var ExpiringUploads = module.parent.exports;
   // templates.js can only access objects in arrays - I think. :/
   var types = ExpiringUploads.hiddenTypes.map(function(type) {
@@ -40,7 +40,7 @@ Admin.render = function(req, res, next) {
   res.render('admin/plugins/expiring-uploads', tplData);
 };
 
-Admin.saveSettings = function(req, res, next) {
+Admin.saveSettings = function(req, res) {
   var ExpiringUploads = module.parent.exports;
   var storageChange = (ExpiringUploads.storage !== req.body.storage);
   var dbData = {
