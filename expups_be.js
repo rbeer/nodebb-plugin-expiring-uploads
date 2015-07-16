@@ -11,7 +11,6 @@ var file = require.main.require('./src/file');
 var fs = require('fs');
 var path = require('path');
 var xxh = require('xxhash');
-var util = require('util');
 
 var ExpiringUploads = {
   // relative to nconf.get('base_dir')
@@ -65,6 +64,7 @@ ExpiringUploads.init = function(app, cb) {
     }
     // route to catch file requests
     app.router.get(nconf.get('upload_url') + ':hash/:tstamp/:fname',
+                   app.middleware.buildHeader,
                    ExpiringUploads.resolveRequest);
     // init admin
     ExpiringUploads.Admin.init(app, cb);
@@ -266,13 +266,11 @@ ExpiringUploads.resolveRequest = function(req, res, cb) {
 };
 
 ExpiringUploads.sendError = function(req, res, errCode) {
-  var mw = require.main.require('./src/middleware/middleware')(req.app);
   // 403 Forbidden, 404 Not Found, 410 Gone
   var tpl = (errCode === '404') ? '404' : 'expiring-uploads_' + errCode;
+  // res.locals.isPlugin = true;
   res.status(parseInt(errCode, 10));
-  mw.buildHeader(req, res, function() {
-    res.render(tpl, {path: req.path});
-  });
+  res.render(tpl, {path: req.path});
 };
 
 module.exports = ExpiringUploads;
