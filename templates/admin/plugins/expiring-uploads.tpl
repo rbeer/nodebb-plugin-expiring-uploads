@@ -155,7 +155,15 @@ $(document).ready(function() {
       hiddenTypes: ftypes
     }, function(data) {
       if (data === 'OK') {
-        app.alertSuccess('Settings saved.');
+        app.alert({
+          type: 'success',
+          alert_id: 'expiring-uploads-saved',
+          title: 'Settings Saved',
+          message: 'Please reload your NodeBB to apply these settings',
+          clickfn: function() {
+            socket.emit('admin.reload');
+          }
+        });
       } else {
         app.alertError('Error while saving settings: ' + data);
       }
