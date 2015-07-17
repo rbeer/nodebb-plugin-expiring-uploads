@@ -120,7 +120,7 @@ $(document).ready(function() {
   expDays.addEventListener('change', calcExpiration);
   expWeeks.addEventListener('change', calcExpiration);
   expMonths.addEventListener('change', calcExpiration);
-  expTstamp.addEventListener('blur', splitExpiration);
+  expTstamp.addEventListener('blur', validateExpiration);
   chkCustomTstamp.addEventListener('click', function handleUseModKey(evt) {
     expTstamp.disabled = !evt.target.checked;
     expDays.disabled = expWeeks.disabled =
@@ -203,12 +203,26 @@ $(document).ready(function() {
                       (parseInt(expWeeks.value, 10) * 604800) +
                       (parseInt(expMonths.value, 10) * 2629743);
   };
-  function splitExpiration() {
-    var totalVal = parseInt(this.value, 10);
-    var monthVal = Math.floor(parseInt(this.value, 10) / 2629743);
-    var weekVal = Math.floor((parseInt(this.value, 10) -
-                             (2629743 * monthVal)) / 604800);
-    var dayVal = Math.floor((parseInt(this.value, 10) - (2629743 * monthVal) -
+  function validateExpiration() {
+    if (this.value === '') {
+      app.alert({
+        type: 'warning',
+        alert_id: 'expiring-uploads-tstamp-invalid',
+        title: 'Invalid value',
+        message: 'Please enter numbers in the custom timestamp field, only!',
+        clickfn: function() {
+          expTstamp.focus();
+        }
+      });
+      this.value = this.defaultValue;
+    } else {
+      splitExpiration(parseInt(this.value, 10));
+    }
+  };
+  function splitExpiration(totalVal) {
+    var monthVal = Math.floor(totalVal / 2629743);
+    var weekVal = Math.floor((totalVal - (2629743 * monthVal)) / 604800);
+    var dayVal = Math.floor((totalVal - (2629743 * monthVal) -
                             (604800 * weekVal)) / 86400);
     expMonths.value = (monthVal <= 12) ? monthVal : 13;
     expWeeks.value = (weekVal <= 3) ? weekVal : 0;
