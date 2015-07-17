@@ -12,5 +12,6 @@
   ],
   "scripts": [],
   "languages": "./language",
+  "defaultLang": "en_GB",
   "templates": "./templates"
 }
