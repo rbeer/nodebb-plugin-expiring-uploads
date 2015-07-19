@@ -32,9 +32,10 @@ Admin.render = function(req, res) {
   var tplData = {
     csrf: req.csrfToken(),
     storagePath: ExpiringUploads.storage,
-    expTstamp: ExpiringUploads.expireAfter / 1000, // js does time in msec...
+    expTstamp: ExpiringUploads.expireAfter / 1000, // humans do time in sec...
     hiddenTypes: types,
     customTstamp: ExpiringUploads.customTstamp,
+    delFiles: ExpiringUploads.delFiles,
     basePath: nconf.get('base_dir')
   };
   res.render('admin/plugins/expiring-uploads', tplData);
@@ -45,19 +46,27 @@ Admin.saveSettings = function(req, res) {
   var storageChange = (ExpiringUploads.storage !== req.body.storage);
   var dbData = {
     storage: req.body.storage,
-    expireAfter: parseInt(req.body.expireAfter, 10) * 1000, // ...humans in sec
+    expireAfter: parseInt(req.body.expireAfter, 10) * 1000, // ...js in msec
     hiddenTypes: req.body.hiddenTypes,
-    customTstamp: (req.body.customTstamp === 'true')
+    customTstamp: (req.body.customTstamp === 'true'),
+    delFiles: (req.body.delFiles === 'true')
   };
   db.setObject('settings:expiring-uploads', dbData, function(err) {
     if (err) {
       res.json(500, 'Writing settings to DB failed. ' + err);
     }
-
+    // clear possibly set delete file interval, before changing values
+    if (ExpiringUploads.delInterval !== undefined) {
+      ExpiringUploads.clearDelInterval();
+    }
     ExpiringUploads.storage = dbData.storage;
     ExpiringUploads.expireAfter = dbData.expireAfter;
     ExpiringUploads.hiddenTypes = dbData.hiddenTypes.split(',');
     ExpiringUploads.customTstamp = dbData.customTstamp;
+    ExpiringUploads.delFiles = dbData.delFiles;
+    if (ExpiringUploads.delFiles && ExpiringUploads.expireAfter > 0) {
+      ExpiringUploads.setDelInterval();
+    }
     if (storageChange) {
       ExpiringUploads.createStorage(function(err) {
         if (err) {

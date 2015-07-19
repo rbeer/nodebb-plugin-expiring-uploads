@@ -67,6 +67,11 @@
               <span class="input-group-addon">{basePath}</span>
               <input type="text" id="storagePath" class="form-control" value="{storagePath}">
             </div>
+            <br />
+            <label for="chkDelFiles">
+              <input type="checkbox" class="form-control" id="chkDelFiles"<!-- IF delFiles --> checked<!-- ENDIF delFiles -->>
+              Delete Files when they are expired.
+            </label>
           </div>
           <div class="form-group">
             <label for="fileTypeAdd">Expiring Filetypes</label><br />
@@ -107,8 +112,9 @@ $(document).ready(function() {
   var expMonths = document.getElementById('expMonths');
   var chkCustomTstamp = document.getElementById('chkCustomTstamp');
   var expTstamp = document.getElementById('expTstamp');
-  // Storage Path
+  // Storage Path & Delete Files
   var storagePath = document.getElementById('storagePath');
+  var chkDelFiles = document.getElementById('chkDelFiles');
   // Expiring Filetypes
   var lstFiletypes = document.getElementById('lstFiletypes');
   var btnAddFiletype = document.getElementById('btnAddFiletype');
@@ -152,7 +158,8 @@ $(document).ready(function() {
       storage: storagePath.value,
       expireAfter : expTstamp.value,
       customTstamp : chkCustomTstamp.checked,
-      hiddenTypes: ftypes
+      hiddenTypes: ftypes,
+      delFiles: chkDelFiles.checked
     }, function(data) {
       if (data === 'OK') {
         app.alert({
@@ -229,7 +236,7 @@ $(document).ready(function() {
     expDays.value = (dayVal <= 6) ? dayVal : 0;
   };
   // called immediately
-  splitExpiration.bind(expTstamp)();
+  splitExpiration(parseInt(expTstamp.value, 10));
 });
 
 </script>

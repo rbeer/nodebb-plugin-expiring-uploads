@@ -1,3 +1,6 @@
+### 0.3.0
+  - ADDED: Deleting expired files from storage.
+
 ### 0.2.1
   - FIX: Automatic 'fa-toggle-on/off' requires checkbox to be nested in label
 

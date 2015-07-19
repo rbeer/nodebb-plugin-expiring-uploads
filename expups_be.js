@@ -13,16 +13,17 @@ var path = require('path');
 var xxh = require('xxhash');
 
 var ExpiringUploads = {
-  // relative to nconf.get('base_dir')
-  storage: '/expiring_uploads/',
-  hiddenTypes: ['.zip', '.rar', '.txt', '.html'],
-  expireAfter: 0, // 24 hours
-  customTstamp: false
+  storage: '/expiring_uploads/', // relative to nconf.get('base_dir')
+  hiddenTypes: [],
+  expireAfter: 0,
+  customTstamp: false,
+  delFiles: false,
+  delInterval: undefined
 };
 ExpiringUploads.Admin = require('./expups_admin');
 
 ExpiringUploads.init = function(app, cb) {
-  async.waterfall([
+  async.series([
     function(next) {
       // get config or create if none found
       db.getObject('settings:expiring-uploads', function(err, config) {
@@ -32,6 +33,7 @@ ExpiringUploads.init = function(app, cb) {
             expireAfter: ExpiringUploads.expireAfter,
             hiddenTypes: ExpiringUploads.hiddenTypes,
             customTstamp: ExpiringUploads.customTstamp,
+            delFiles: ExpiringUploads.delFiles,
             lastID: '0'
           };
           db.setObject('settings:expiring-uploads', config);
@@ -40,6 +42,7 @@ ExpiringUploads.init = function(app, cb) {
           ExpiringUploads.expireAfter = parseInt(config.expireAfter, 10);
           ExpiringUploads.hiddenTypes = config.hiddenTypes.split(',');
           ExpiringUploads.customTstamp = (config.customTstamp === 'true');
+          ExpiringUploads.delFiles = (config.delFiles === 'true');
         }
         next();
       });
@@ -66,8 +69,105 @@ ExpiringUploads.init = function(app, cb) {
     app.router.get(nconf.get('upload_url') + ':hash/:tstamp/:fname',
                    app.middleware.buildHeader,
                    ExpiringUploads.resolveRequest);
+    // set interval for deleting files, when set
+    if (ExpiringUploads.delFiles && ExpiringUploads.expireAfter > 0) {
+      ExpiringUploads.setDelInterval();
+    }
     // init admin
     ExpiringUploads.Admin.init(app, cb);
+  });
+};
+
+ExpiringUploads.setDelInterval = function() {
+  winston.info('[plugins:expiring-uploads] ' +
+               'Scheduled deleting expired files every ' +
+               (ExpiringUploads.expireAfter / 1000) + ' seconds');
+  ExpiringUploads.delInterval = setInterval(ExpiringUploads.deleteExpiredFiles,
+                                            ExpiringUploads.expireAfter);
+};
+
+ExpiringUploads.clearDelInterval = function() {
+  clearInterval(ExpiringUploads.delInterval);
+  ExpiringUploads.delInterval = undefined;
+};
+
+ExpiringUploads.deleteExpiredFiles = function() {
+  async.waterfall([
+    function(next) {
+      // get ids for expired uploads
+      db.getSortedSetRangeByScoreWithScores('expiring-uploads:ids', 0, -1,
+                                  1, (Date.now() - ExpiringUploads.expireAfter),
+                                  next);
+    },
+    function(fileIds, next) {
+      // no expired files; exit
+      if (fileIds.length === 0) {
+        var err = new RangeError('No expired uploads found.');
+        err.code = 'ENOEXP';
+        return next(err);
+      }
+      // get filenames of expired files
+      var keys = fileIds.map(function(id) {
+        return 'expiring-uploads:' + id.value;
+      });
+      db.getObjectsFields(keys, ['fileName'], function(err, files) {
+        if (err) {
+          return next(err);
+        }
+        next(null, fileIds, keys, files);
+      });
+    },
+    function(fileIds, keys, files, next) {
+      // delete files in fs
+      async.each(files, function(file, cb) {
+        var filePath = path.join(nconf.get('base_dir'),
+                                 ExpiringUploads.storage, file.fileName);
+        fs.unlink(filePath, function(err) {
+          if (err) {
+            if (err.code === 'ENOENT') {
+              // no reason to panic, if file is not found
+              winston.warn('[plugins:expiring-uploads] Couldn\'t delete ' +
+                           filePath + ' [Not found]');
+            } else {
+              // everything else could be a serious problem; abort
+              cb(err);
+              return next(err);
+            }
+          } else {
+            winston.verbose('[plugins:expiring-uploads] Deleted ' + filePath);
+          }
+          cb();
+        });
+      }, function(err) {
+        if (err) {
+          return winston.warn(err);
+        }
+      });
+      next(null, fileIds, keys);
+    },
+    function(fileIds, keys, next) {
+      // delete files objects in DB
+      db.deleteAll(keys, function(err) {
+        if (err) {
+          return next(err);
+        }
+        // delete files references from ID store in DB
+        var scores = Array.apply(null, { length: fileIds.length })
+                     .map(function() { return 0; });
+        var values = Array.apply(null, { length: fileIds.length })
+                     .map(function() { return fileIds[arguments[1]].value; });
+        db.sortedSetAdd('expiring-uploads:ids', scores, values, next);
+      });
+    }
+  ], function(err, keys) {
+    if (err) {
+      if (err.code === 'ENOEXP') {
+        return winston.info('[plugins:expiring-uploads] ' + err.message);
+      }
+      winston.error('[plugins:expiring-uploads] ' +
+                    'Error while deleting expired files');
+      winston.error(err);
+    }
   });
 };
 
@@ -219,14 +319,12 @@ ExpiringUploads.resolveRequest = function(req, res, cb) {
 
   // return when downloading files requires to be logged in
   if (parseInt(meta.config.privateUploads, 10) === 1 && !req.user) {
-    // todo: create custom template/message
     return ExpiringUploads.sendError(req, res, '403');
   }
   // return when file (according to request url) is expired.
   // the url could be wrong, but then it's up for grabs, anyway :)
   if (ExpiringUploads.expireAfter !== 0 &&
       Date.now() > tstamp + ExpiringUploads.expireAfter) {
-    // todo: create custom template/message
     return ExpiringUploads.sendError(req, res, '410');
   }
   async.waterfall([
@@ -244,6 +342,9 @@ ExpiringUploads.resolveRequest = function(req, res, cb) {
     }], function(err, fields) {
       if (err) {
         return cb(err);
+      }
+      if (!fields) {
+        return ExpiringUploads.sendError(req, res, '410');
       }
       var hashMatch = (fields.hash === hash);
       var timeMatch = (parseInt(fields.tstamp, 10) === tstamp);
