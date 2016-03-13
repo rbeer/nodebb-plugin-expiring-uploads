@@ -1,5 +1,8 @@
 'use strict';
 
+var fs = require('fs');
+var path = require('path');
+var xxh = require('xxhash');
 var nconf = require.main.require('nconf');
 var winston = require.main.require('winston');
 var async = require.main.require('async');
@@ -8,9 +11,7 @@ var utils = require.main.require('./public/src/utils');
 var meta = require.main.require('./src/meta');
 var validator = require.main.require('validator');
 var file = require.main.require('./src/file');
-var fs = require('fs');
-var path = require('path');
-var xxh = require('xxhash');
+var PluginSocket = require.main.require('./src/socket.io/plugins');
 
 var ExpiringUploads = {
   storage: '/expiring_uploads/', // relative to nconf.get('base_dir')
@@ -18,7 +19,9 @@ var ExpiringUploads = {
   expireAfter: 0,
   customTstamp: false,
   delFiles: false,
-  delInterval: undefined
+  delInterval: undefined,
+  linkText: '',
+  setLinkText: false
 };
 ExpiringUploads.Admin = require('./expups_admin');
 
@@ -34,6 +37,8 @@ ExpiringUploads.init = function(app, cb) {
             hiddenTypes: ExpiringUploads.hiddenTypes,
             customTstamp: ExpiringUploads.customTstamp,
             delFiles: ExpiringUploads.delFiles,
+            linkText: ExpiringUploads.linkText,
+            setLinkText: ExpiringUploads.setLinkText,
             lastID: '0'
           };
           db.setObject('settings:expiring-uploads', config);
@@ -43,6 +48,8 @@ ExpiringUploads.init = function(app, cb) {
           ExpiringUploads.hiddenTypes = config.hiddenTypes.split(',');
           ExpiringUploads.customTstamp = (config.customTstamp === 'true');
           ExpiringUploads.delFiles = (config.delFiles === 'true');
+          ExpiringUploads.linkText = config.linkText;
+          ExpiringUploads.setLinkText = (config.setLinkText === 'true');
         }
         next();
       });

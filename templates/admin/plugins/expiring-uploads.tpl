@@ -61,7 +61,7 @@
             </div>
           </div>
           <div class="form-group">
-            <label for="storagePath">Storage Path</label><br />
+            <label for="storagePath">Storage</label><br />
             <p>Folder where expiring uploads are stored.</p>
             <div class="input-group">
               <span class="input-group-addon">{basePath}</span>
@@ -95,6 +95,22 @@
               </div>
             </div>
           </div>
+          <div class="form-group">
+            <label for="fileTypeAdd">Link Text</label><br />
+            <p>Show this text instead of the filename on the link.</p>
+            <div class="row">
+              <div class="col-lg-5">
+                <div class="input-group">
+                  <div class="input-group-addon">
+                    <label style="margin-bottom: -1px;">
+                      <input type="checkbox" id="chkLinkText"<!-- IF setLinkText --> checked<!-- ENDIF setLinkText -->>
+                    </label>
+                  </div>
+                  <input type="text" class="form-control" id="linkText" value="{linkText}"<!-- IF !setLinkText --> disabled<!-- ENDIF !setLinkText -->/>
+                </div>
+              </div>
+            </div>
+          </div>
           <button class="btn btn-primary btn-md" id="btnSave">Save Settings</button>
         </form>
       </div>
@@ -104,7 +120,7 @@
 
 <script type="text/javascript">
 'use strict';
-/* globals app, socket */
+/* globals app, socket config */
 $(document).ready(function() {
   // Expiration Time
   var expDays = document.getElementById('expDays');
@@ -119,6 +135,9 @@ $(document).ready(function() {
   var lstFiletypes = document.getElementById('lstFiletypes');
   var btnAddFiletype = document.getElementById('btnAddFiletype');
   var txtFiletype = document.getElementById('txtFiletype');
+  // Link Text
+  var chkLinkText = document.getElementById('chkLinkText');
+  var linkText = document.getElementById('linkText');
   // Save Settings
   var btnSave = document.getElementById('btnSave');
 
@@ -127,10 +146,10 @@ $(document).ready(function() {
   expWeeks.addEventListener('change', calcExpiration);
   expMonths.addEventListener('change', calcExpiration);
   expTstamp.addEventListener('blur', validateExpiration);
-  chkCustomTstamp.addEventListener('click', function handleUseModKey(evt) {
-    expTstamp.disabled = !evt.target.checked;
+  chkCustomTstamp.addEventListener('click', function handleUseModKey() {
+    expTstamp.disabled = !this.checked;
     expDays.disabled = expWeeks.disabled =
-    expMonths.disabled = evt.target.checked;
+    expMonths.disabled = this.checked;
   });
 
   storagePath.addEventListener('blur', function() {
@@ -139,12 +158,16 @@ $(document).ready(function() {
     }
   });
 
-  btnAddFiletype.addEventListener('click', function(e) {
+  btnAddFiletype.addEventListener('click', function() {
     addFiletypes(txtFiletype.value);
     txtFiletype.value = '';
   });
   lstFiletypes.addEventListener('dblclick', function() {
     this.options.remove(this.selectedIndex);
+  });
+
+  chkLinkText.addEventListener('click', function() {
+    linkText.disabled = !this.checked;
   });
 
   btnSave.addEventListener('click', function(e) {
@@ -154,12 +177,14 @@ $(document).ready(function() {
     }
     ftypes = ftypes.substring(0, ftypes.length - 1);
     $.post(config.relative_path + '/api/admin/plugins/expiring-uploads/save', {
-      _csrf : config.csrf_token,
+      _csrf: config.csrf_token,
       storage: storagePath.value,
-      expireAfter : expTstamp.value,
-      customTstamp : chkCustomTstamp.checked,
+      expireAfter: expTstamp.value,
+      customTstamp: chkCustomTstamp.checked,
       hiddenTypes: ftypes,
-      delFiles: chkDelFiles.checked
+      delFiles: chkDelFiles.checked,
+      linkText: linkText.value,
+      setLinkText: chkLinkText.checked
     }, function(data) {
       if (data === 'OK') {
         app.alert({

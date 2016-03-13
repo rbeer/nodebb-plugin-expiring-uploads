@@ -36,7 +36,9 @@ Admin.render = function(req, res) {
     hiddenTypes: types,
     customTstamp: ExpiringUploads.customTstamp,
     delFiles: ExpiringUploads.delFiles,
-    basePath: nconf.get('base_dir')
+    basePath: nconf.get('base_dir'),
+    linkText: ExpiringUploads.linkText,
+    setLinkText: ExpiringUploads.setLinkText
   };
   res.render('admin/plugins/expiring-uploads', tplData);
 };
@@ -49,7 +51,9 @@ Admin.saveSettings = function(req, res) {
     expireAfter: parseInt(req.body.expireAfter, 10) * 1000, // ...js in msec
     hiddenTypes: req.body.hiddenTypes,
     customTstamp: (req.body.customTstamp === 'true'),
-    delFiles: (req.body.delFiles === 'true')
+    delFiles: (req.body.delFiles === 'true'),
+    linkText: req.body.linkText,
+    setLinkText: (req.body.setLinkText === 'true')
   };
   db.setObject('settings:expiring-uploads', dbData, function(err) {
     if (err) {
@@ -64,6 +68,8 @@ Admin.saveSettings = function(req, res) {
     ExpiringUploads.hiddenTypes = dbData.hiddenTypes.split(',');
     ExpiringUploads.customTstamp = dbData.customTstamp;
     ExpiringUploads.delFiles = dbData.delFiles;
+    ExpiringUploads.linkText = dbData.linkText;
+    ExpiringUploads.setLinkText = dbData.setLinkText;
     if (ExpiringUploads.delFiles && ExpiringUploads.expireAfter > 0) {
       ExpiringUploads.setDelInterval();
     }
