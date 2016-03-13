@@ -11,7 +11,7 @@ var utils = require.main.require('./public/src/utils');
 var meta = require.main.require('./src/meta');
 var validator = require.main.require('validator');
 var file = require.main.require('./src/file');
-var PluginSocket = require.main.require('./src/socket.io/plugins');
+// var PluginSocket = require.main.require('./src/socket.io/plugins');
 
 var ExpiringUploads = {
   storage: '/expiring_uploads/', // relative to nconf.get('base_dir')
@@ -21,9 +21,9 @@ var ExpiringUploads = {
   delFiles: false,
   delInterval: undefined,
   linkText: '',
-  setLinkText: false
+  setLinkText: false,
+  Admin: require('./expups_admin')
 };
-ExpiringUploads.Admin = require('./expups_admin');
 
 ExpiringUploads.init = function(app, cb) {
   async.series([
@@ -201,6 +201,7 @@ ExpiringUploads.createStorage = function(cb) {
 };
 
 ExpiringUploads.handleUpload = function(data, cb) {
+  console.log(data);
   if (!ExpiringUploads.checkPermissions(data, cb)) {
     return;
   }
@@ -210,9 +211,7 @@ ExpiringUploads.handleUpload = function(data, cb) {
     var hexTstamp = tstamp.toString(16);
 
     var filename = data.file.name.split('.');
-    filename.forEach(function(name, idx) {
-      filename[idx] = utils.slugify(name);
-    });
+    filename.map((name) => utils.slugify(name));
     filename = filename.join('.');
     filename = validator.escape(filename).substr(0, 255);
     var imgData = {
@@ -276,14 +275,14 @@ ExpiringUploads.doStandard = function(data, cb) {
   filename = Date.now() + '-' + validator.escape(filename).substr(0, 255);
   file.saveFileToLocal(filename, 'files', data.file.path,
                        function(err, upload) {
-    if (err) {
-      return cb(err);
-    }
-    cb(null, {
-			url: nconf.get('relative_path') + upload.url,
-      name: data.file.name
-		});
-  });
+                         if (err) {
+                           return cb(err);
+                         }
+                         cb(null, {
+                           url: nconf.get('relative_path') + upload.url,
+                           name: data.file.name
+                         });
+                       });
 };
 
 ExpiringUploads.saveFile = function(src, dest, cb) {
@@ -323,6 +322,7 @@ ExpiringUploads.resolveRequest = function(req, res, cb) {
   // timestamp comes in as hex string
   var tstamp = parseInt('0x' + req.params.tstamp, 16);
   var fname = req.params.fname;
+  console.log(hash, tstamp, fname);
 
   // return when downloading files requires to be logged in
   if (parseInt(meta.config.privateUploads, 10) === 1 && !req.user) {
@@ -332,6 +332,7 @@ ExpiringUploads.resolveRequest = function(req, res, cb) {
   // the url could be wrong, but then it's up for grabs, anyway :)
   if (ExpiringUploads.expireAfter !== 0 &&
       Date.now() > tstamp + ExpiringUploads.expireAfter) {
+    console.log('expired');
     return ExpiringUploads.sendError(req, res, '410');
   }
   async.waterfall([
@@ -351,11 +352,12 @@ ExpiringUploads.resolveRequest = function(req, res, cb) {
         return cb(err);
       }
       if (!fields) {
+        console.log('no fields');
         return ExpiringUploads.sendError(req, res, '410');
       }
       var hashMatch = (fields.hash === hash);
       var timeMatch = (parseInt(fields.tstamp, 10) === tstamp);
-      var nameMatch = (fields.fileName === tstamp + '-' + fname);
+      var nameMatch = (fields.fileName.toLowerCase() === tstamp + '-' + fname);
       if (hashMatch && timeMatch && nameMatch) {
         res.status(200);
         // tell (not force! It's not part of the HTTP standard.) the browser
