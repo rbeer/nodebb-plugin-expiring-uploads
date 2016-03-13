@@ -5,3 +5,4 @@ THUMBS.db
 node_modules/
 snaps/
 .atom-build.json
+.eslintrc
