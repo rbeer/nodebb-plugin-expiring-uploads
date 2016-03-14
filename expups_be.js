@@ -115,9 +115,7 @@ ExpiringUploads.deleteExpiredFiles = function() {
         return next(err);
       }
       // get filenames of expired files
-      var keys = fileIds.map(function(id) {
-        return 'expiring-uploads:' + id.value;
-      });
+      var keys = fileIds.map((id) => 'expiring-uploads:' + id.value);
       db.getObjectsFields(keys, ['fileName'], function(err, files) {
         if (err) {
           return next(err);
@@ -154,18 +152,16 @@ ExpiringUploads.deleteExpiredFiles = function() {
       next(null, fileIds, keys);
     },
     function(fileIds, keys, next) {
-      // delete files objects in DB
-      db.deleteAll(keys, function(err) {
-        if (err) {
-          return next(err);
-        }
-        // delete files references from ID store in DB
-        var scores = Array.apply(null, { length: fileIds.length })
-                     .map(function() { return 0; });
-        var values = Array.apply(null, { length: fileIds.length })
-                     .map(function() { return fileIds[arguments[1]].value; });
-        db.sortedSetAdd('expiring-uploads:ids', scores, values, next);
-      });
+      async.each(keys, (key, cb) => {
+        db.setObjectField(key, 'expired', true, () => {
+          let data = fileIds.reduce((arrays, fileId) => {
+            arrays.scores.push(0);
+            arrays.values.push(fileId['value']);
+            return arrays;
+          }, {scores: [], values: []});
+          db.sortedSetAdd('expiring-uploads:ids', data['scores'], data['values'], cb);
+        });
+      }, err => err ? winston.warn(err) : next());
     }
   ], function(err, keys) {
     if (err) {
@@ -218,7 +214,8 @@ ExpiringUploads.handleUpload = function(data, cb) {
       fileName: expTstamp + '-' + filename,
       origName: data.file.name,
       expTstamp: expTstamp,
-      hash: ExpiringUploads.getHash(data)
+      hash: ExpiringUploads.getHash(data),
+      expired: false
     };
 
     async.parallel({
