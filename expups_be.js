@@ -215,7 +215,8 @@ ExpiringUploads.handleUpload = function(data, cb) {
       origName: data.file.name,
       expTstamp: expTstamp,
       hash: ExpiringUploads.getHash(data),
-      expired: false
+      expired: false,
+      uid: data.uid
     };
 
     async.parallel({
