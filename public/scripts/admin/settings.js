@@ -67,11 +67,11 @@ define('expiring-uploads.settings', function() {
       }
     },
     addFileType: function() {
-      _addFiletypes(UIElements.txtFiletype.value);
+      _addFileTypes(UIElements.txtFiletype.value);
       UIElements.txtFiletype.value = '';
     },
     removeFileType: function() {
-      this.options.remove(this.selectedIndex);
+      if (this.selectedIndex > -1) _FileTypes.remove(this.selectedIndex);
     },
     saveSettings: function(e) {
       var ftypes = '';
@@ -104,49 +104,63 @@ define('expiring-uploads.settings', function() {
         }
       });
       e.preventDefault();
-    }
+    }/*,
+    toggleCustomLinkText: function() {
+      UIElements.linkText.disabled = !this.checked;
+    }*/
   };
+  var _hookMap = [
+    ['expDays', 'change', 'calcExpiration'],
+    ['expWeeks', 'change', 'calcExpiration'],
+    ['expMonths', 'change', 'calcExpiration'],
+    ['expTstamp', 'blur', 'validateExpiration'],
+    ['chkCustomTstamp', 'click', 'toggleCustomTimestamp'],
+    ['storagePath', 'blur', 'validateStoragePath'],
+    ['btnAddFiletype', 'click', 'addFileType'],
+    ['lstFiletypes', 'dblclick', 'removeFileType'],
+    ['btnSave', 'click', 'saveSettings']/*,
+    ['chkLinkText', 'click', 'toggleCustomLinkText']*/
+  ];
 
   var _init = function() {
     _hookElements();
     UIHandler.splitExpiration(parseInt(UIElements.expTstamp.value, 10));
   };
   var _hookElements = function() {
-    UIElements.expDays.addEventListener('change', UIHandler.calcExpiration);
-    UIElements.expWeeks.addEventListener('change', UIHandler.calcExpiration);
-    UIElements.expMonths.addEventListener('change', UIHandler.calcExpiration);
-    UIElements.expTstamp.addEventListener('blur', UIHandler.validateExpiration);
-    UIElements.chkCustomTstamp.addEventListener('click', UIHandler.toggleCustomTimestamp);
-    UIElements.storagePath.addEventListener('blur', UIHandler.validateStoragePath);
-    UIElements.btnAddFiletype.addEventListener('click', UIHandler.addFileType);
-    UIElements.lstFiletypes.addEventListener('dblclick', UIHandler.removeFileType);
-    UIElements.btnSave.addEventListener('click', UIHandler.saveSettings);
-    /*  UIElements.chkLinkText.addEventListener('click', function() {
-      UIElements.linkText.disabled = !this.checked;
-    });*/
+    _hookMap.forEach((hook) =>
+      UIElements[hook[0]]
+      .addEventListener(hook[1], UIHandler[hook[2]])
+    );
   };
-  var _addFiletypes = function(types) {
-    var listhas = false;
-    if (types === '') {
-      return app.alertError('Please add at least one filetype! ' +
-                            '(e.g. .zip, rar,.html)');
+  var _FileTypes = {
+
+    types: Array.prototype.slice.call(UIElements.lstFiletypes.options)
+           .map((typeElement) => typeElement.value.substring(1)),
+    hasType: (type) => _FileTypes.types.indexOf(type) > -1,
+    add: (type) => {
+      if (!_FileTypes.hasType(type)) {
+        UIElements.lstFiletypes.add(new Option('.' + type));
+        return _FileTypes.types.push(type);
+      } else {
+        return void 0;
+      }
+    },
+    remove: (idx) => {
+      UIElements.lstFiletypes.options.remove(idx);
+      return _FileTypes.types.splice(idx, 1);
     }
-    types = types.split(',');
-    for (var i = 0; i < types.length; i++) {
-      types[i] = types[i].trim();
-      if (types[i].substring(0, 1) !== '.') {
-        types[i] = '.' + types[i];
-      }
-      listhas = false;
-      for (var j = 0; j < UIElements.lstFiletypes.options.length; j++) {
-        if (UIElements.lstFiletypes.options[j].value === types[i]) {
-          listhas = true;
-          break;
-        }
-      }
-      if (!listhas) {
-        UIElements.lstFiletypes.add(new Option(types[i]));
-      }
+  };
+
+  var _addFileTypes = function(typeString) {
+    var regex = /\.?([^, ][\w]*)/g;
+    var match;
+    if (!regex.test(typeString)) {
+      return app.alertError('Please add at least one filetype!');
+    }
+    regex.lastIndex = 0;
+    while ((match = regex.exec(typeString))) {
+      console.log(match);
+      _FileTypes.add(match[1]);
     }
   };
 

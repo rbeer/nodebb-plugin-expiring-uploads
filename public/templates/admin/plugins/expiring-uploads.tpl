@@ -79,9 +79,9 @@
             <div class="row">
               <div class="col-lg-5">
                 <div class="input-group">
-                  <input type="text" id="txtFiletype" class="form-control" placeholder=".zip">
+                  <input type="text" id="txtFiletype" class="form-control" placeholder="zip rar .txt .tmp">
                   <span class="input-group-btn">
-                    <button type="button" id="btnAddFiletype" class="btn btn-default">Add >></button>
+                    <button type="button" id="btnAddFiletype" class="btn btn-default">Add</button>
                   </span>
                 </div>
               </div>
