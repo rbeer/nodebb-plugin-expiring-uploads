@@ -60,6 +60,50 @@ define('expiring-uploads.settings', function() {
       UIElements.expTstamp.disabled = !this.checked;
       UIElements.expDays.disabled = UIElements.expWeeks.disabled =
         UIElements.expMonths.disabled = this.checked;
+    },
+    validateStoragePath: function() {
+      if (this.value.substr(-1) !== '/') {
+        this.value = this.value + '/';
+      }
+    },
+    addFileType: function() {
+      addFiletypes(UIElements.txtFiletype.value);
+      UIElements.txtFiletype.value = '';
+    },
+    removeFileType: function() {
+      this.options.remove(this.selectedIndex);
+    },
+    saveSettings: function(e) {
+      var ftypes = '';
+      for (var i = 0; i < UIElements.lstFiletypes.options.length; i++) {
+        ftypes = ftypes + UIElements.lstFiletypes.options[i].value + ',';
+      }
+      ftypes = ftypes.substring(0, ftypes.length - 1);
+      $.post(config.relative_path + '/api/admin/plugins/expiring-uploads/save', {
+        _csrf: config.csrf_token,
+        storage: UIElements.storagePath.value,
+        expireAfter: UIElements.expTstamp.value,
+        customTstamp: UIElements.chkCustomTstamp.checked,
+        hiddenTypes: ftypes,
+        delFiles: UIElements.chkDelFiles.checked,
+        linkText: UIElements.linkText.value,
+        setLinkText: UIElements.chkLinkText.checked
+      }, function(data) {
+        if (data === 'OK') {
+          app.alert({
+            type: 'success',
+            alert_id: 'expiring-uploads-saved',
+            title: 'Settings Saved',
+            message: 'Please reload your NodeBB to apply these settings',
+            clickfn: function() {
+              socket.emit('admin.reload');
+            }
+          });
+        } else {
+          app.alertError('Error while saving settings: ' + data);
+        }
+      });
+      e.preventDefault();
     }
   };
 
@@ -70,56 +114,16 @@ define('expiring-uploads.settings', function() {
   UIElements.expTstamp.addEventListener('blur', UIHandler.validateExpiration);
   UIElements.chkCustomTstamp.addEventListener('click', UIHandler.toggleCustomTimestamp);
 
-  UIElements.storagePath.addEventListener('blur', function() {
-    if (this.value.substr(-1) !== '/') {
-      this.value = this.value + '/';
-    }
-  });
+  UIElements.storagePath.addEventListener('blur', UIHandler.validateStoragePath);
 
-  UIElements.btnAddFiletype.addEventListener('click', function() {
-    addFiletypes(UIElements.txtFiletype.value);
-    UIElements.txtFiletype.value = '';
-  });
-  UIElements.lstFiletypes.addEventListener('dblclick', function() {
-    this.options.remove(this.selectedIndex);
-  });
+  UIElements.btnAddFiletype.addEventListener('click', UIHandler.addFileType);
+  UIElements.lstFiletypes.addEventListener('dblclick', UIHandler.removeFileType);
 
   UIElements.chkLinkText.addEventListener('click', function() {
     UIElements.linkText.disabled = !this.checked;
   });
 
-  UIElements.btnSave.addEventListener('click', function(e) {
-    var ftypes = '';
-    for (var i = 0; i < UIElements.lstFiletypes.options.length; i++) {
-      ftypes = ftypes + UIElements.lstFiletypes.options[i].value + ',';
-    }
-    ftypes = ftypes.substring(0, ftypes.length - 1);
-    $.post(config.relative_path + '/api/admin/plugins/expiring-uploads/save', {
-      _csrf: config.csrf_token,
-      storage: UIElements.storagePath.value,
-      expireAfter: UIElements.expTstamp.value,
-      customTstamp: UIElements.chkCustomTstamp.checked,
-      hiddenTypes: ftypes,
-      delFiles: UIElements.chkDelFiles.checked,
-      linkText: UIElements.linkText.value,
-      setLinkText: UIElements.chkLinkText.checked
-    }, function(data) {
-      if (data === 'OK') {
-        app.alert({
-          type: 'success',
-          alert_id: 'expiring-uploads-saved',
-          title: 'Settings Saved',
-          message: 'Please reload your NodeBB to apply these settings',
-          clickfn: function() {
-            socket.emit('admin.reload');
-          }
-        });
-      } else {
-        app.alertError('Error while saving settings: ' + data);
-      }
-    });
-    e.preventDefault();
-  });
+  UIElements.btnSave.addEventListener('click', UIHandler.saveSettings);
 
   function addFiletypes(types) {
     var listhas = false;
