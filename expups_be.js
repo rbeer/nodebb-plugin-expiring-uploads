@@ -105,8 +105,7 @@ ExpiringUploads.deleteExpiredFiles = function() {
     function(next) {
       // get ids for expired uploads
       db.getSortedSetRangeByScoreWithScores('expiring-uploads:ids', 0, -1,
-                                  1, (Date.now() - ExpiringUploads.expireAfter),
-                                  next);
+                                            1, Date.now(), next);
     },
     function(fileIds, next) {
       // no expired files; exit
@@ -203,23 +202,22 @@ ExpiringUploads.createStorage = function(cb) {
 };
 
 ExpiringUploads.handleUpload = function(data, cb) {
-  console.log(data);
   if (!ExpiringUploads.checkPermissions(data, cb)) {
     return;
   }
   if (ExpiringUploads.hiddenTypes.indexOf(path.extname(data.file.name)) > -1) {
-    var tstamp = Date.now();
-    // only used for the link; all internals use the numeric tstamp
-    var hexTstamp = tstamp.toString(16);
+    var expTstamp = Date.now() + ExpiringUploads.expireAfter;
+    // only used for the link; all internals use the numeric expTstamp
+    var hexTstamp = expTstamp.toString(16);
 
     var filename = data.file.name.split('.');
     filename.map((name) => utils.slugify(name));
     filename = filename.join('.');
     filename = validator.escape(filename).substr(0, 255);
     var uploadData = {
-      fileName: tstamp + '-' + filename,
+      fileName: expTstamp + '-' + filename,
       origName: data.file.name,
-      tstamp: tstamp,
+      expTstamp: expTstamp,
       hash: ExpiringUploads.getHash(data)
     };
 
@@ -303,7 +301,7 @@ ExpiringUploads.writeToDB = function(uploadData, cb) {
       db.incrObjectField('settings:expiring-uploads', 'lastID', next);
     },
     function(id, next) {
-      db.sortedSetAdd('expiring-uploads:ids', uploadData.tstamp, id, function() {
+      db.sortedSetAdd('expiring-uploads:ids', uploadData.expTstamp, id, function() {
         return next(null, id);
       });
     },
@@ -324,7 +322,6 @@ ExpiringUploads.resolveRequest = function(req, res, cb) {
   // timestamp comes in as hex string
   var tstamp = parseInt('0x' + req.params.tstamp, 16);
   var fname = req.params.fname;
-  console.log(hash, tstamp, fname);
 
   // return when downloading files requires to be logged in
   if (parseInt(meta.config.privateUploads, 10) === 1 && !req.user) {
@@ -332,9 +329,7 @@ ExpiringUploads.resolveRequest = function(req, res, cb) {
   }
   // return when file (according to request url) is expired.
   // the url could be wrong, but then it's up for grabs, anyway :)
-  if (ExpiringUploads.expireAfter !== 0 &&
-      Date.now() > tstamp + ExpiringUploads.expireAfter) {
-    console.log('expired');
+  if (ExpiringUploads.expireAfter !== 0 && Date.now() > tstamp) {
     return ExpiringUploads.sendError(req, res, '410');
   }
   async.waterfall([
@@ -358,21 +353,17 @@ ExpiringUploads.resolveRequest = function(req, res, cb) {
         return ExpiringUploads.sendError(req, res, '410');
       }
       var hashMatch = (fields.hash === hash);
-      var timeMatch = (parseInt(fields.tstamp, 10) === tstamp);
+      var timeMatch = (parseInt(fields.expTstamp, 10) === tstamp);
       var nameMatch = (fields.fileName.toLowerCase() === tstamp + '-' + fname);
       if (hashMatch && timeMatch && nameMatch) {
         res.status(200);
-        // tell (not force! It's not part of the HTTP standard.) the browser
-        // to download the file, even if it has a recognized/handled MIME.
-        // the 'filename' parameter tries to restore the original filename, as
-        // if it never had been slugified (which it has been in the url). :D
         // http://www.w3.org/Protocols/rfc2616/rfc2616-sec19.html#sec19.5.1
         res.setHeader('Content-Disposition', 'attachement; filename="' +
                                              fields.origName + '"');
         res.sendFile(nconf.get('base_dir') + ExpiringUploads.storage +
                      fields.fileName);
       } else {
-        ExpiringUploads.sendError(req, res, '410');
+        ExpiringUploads.sendError(req, res, '404');
       }
     });
 };
