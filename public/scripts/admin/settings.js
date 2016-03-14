@@ -67,7 +67,7 @@ define('expiring-uploads.settings', function() {
       }
     },
     addFileType: function() {
-      addFiletypes(UIElements.txtFiletype.value);
+      _addFiletypes(UIElements.txtFiletype.value);
       UIElements.txtFiletype.value = '';
     },
     removeFileType: function() {
@@ -107,24 +107,25 @@ define('expiring-uploads.settings', function() {
     }
   };
 
-  UIElements.expDays.addEventListener('change', UIHandler.calcExpiration);
-  UIElements.expWeeks.addEventListener('change', UIHandler.calcExpiration);
-  UIElements.expMonths.addEventListener('change', UIHandler.calcExpiration);
-  UIElements.expTstamp.addEventListener('blur', UIHandler.validateExpiration);
-  UIElements.chkCustomTstamp.addEventListener('click', UIHandler.toggleCustomTimestamp);
-
-  UIElements.storagePath.addEventListener('blur', UIHandler.validateStoragePath);
-
-  UIElements.btnAddFiletype.addEventListener('click', UIHandler.addFileType);
-  UIElements.lstFiletypes.addEventListener('dblclick', UIHandler.removeFileType);
-
-/*  UIElements.chkLinkText.addEventListener('click', function() {
-    UIElements.linkText.disabled = !this.checked;
-  });*/
-
-  UIElements.btnSave.addEventListener('click', UIHandler.saveSettings);
-
-  function addFiletypes(types) {
+  var _init = function() {
+    _hookElements();
+    UIHandler.splitExpiration(parseInt(UIElements.expTstamp.value, 10));
+  };
+  var _hookElements = function() {
+    UIElements.expDays.addEventListener('change', UIHandler.calcExpiration);
+    UIElements.expWeeks.addEventListener('change', UIHandler.calcExpiration);
+    UIElements.expMonths.addEventListener('change', UIHandler.calcExpiration);
+    UIElements.expTstamp.addEventListener('blur', UIHandler.validateExpiration);
+    UIElements.chkCustomTstamp.addEventListener('click', UIHandler.toggleCustomTimestamp);
+    UIElements.storagePath.addEventListener('blur', UIHandler.validateStoragePath);
+    UIElements.btnAddFiletype.addEventListener('click', UIHandler.addFileType);
+    UIElements.lstFiletypes.addEventListener('dblclick', UIHandler.removeFileType);
+    UIElements.btnSave.addEventListener('click', UIHandler.saveSettings);
+    /*  UIElements.chkLinkText.addEventListener('click', function() {
+      UIElements.linkText.disabled = !this.checked;
+    });*/
+  };
+  var _addFiletypes = function(types) {
     var listhas = false;
     if (types === '') {
       return app.alertError('Please add at least one filetype! ' +
@@ -147,9 +148,9 @@ define('expiring-uploads.settings', function() {
         UIElements.lstFiletypes.add(new Option(types[i]));
       }
     }
-  }
+  };
 
-  UIHandler.splitExpiration(parseInt(UIElements.expTstamp.value, 10));
+  _init();
   return {
     _elements: UIElements,
     _handler: UIHandler

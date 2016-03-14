@@ -119,5 +119,8 @@
 </div>
 
 <script type="text/javascript" src="{relative_path}/plugins/nodebb-plugin-expiring-uploads/scripts/admin/settings.js"></script>
-<script defer>require(['expiring-uploads.settings'], (settings) => console.log(settings));
+<script defer>
+  require(['expiring-uploads.settings'], (settings) => {
+    console.log(settings);
+  });
 </script>
