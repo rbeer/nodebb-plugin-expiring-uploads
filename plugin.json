@@ -6,9 +6,9 @@
   "library": "./expups_be.js",
   "staticDirs": {},
   "scripts": [],
-  "languages": "./language",
+  "languages": "public/locales",
   "defaultLang": "en_GB",
-  "templates": "./templates",
+  "templates": "public/templates",
   "hooks": [
     { "hook": "filter:admin.header.build", "method": "Admin.addMenuItem" },
     { "hook": "filter:uploadFile", "method": "handleUpload" },

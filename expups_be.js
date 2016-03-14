@@ -76,6 +76,8 @@ ExpiringUploads.init = function(app, cb) {
     app.router.get(nconf.get('upload_url') + ':hash/:tstamp/:fname',
                    app.middleware.buildHeader,
                    ExpiringUploads.resolveRequest);
+    app.router.get('/api/' + nconf.get('upload_url') + ':hash/:tstamp/:fname',
+                   ExpiringUploads.resolveRequest);
     // set interval for deleting files, when set
     if (ExpiringUploads.delFiles && ExpiringUploads.expireAfter > 0) {
       ExpiringUploads.setDelInterval();
@@ -214,7 +216,7 @@ ExpiringUploads.handleUpload = function(data, cb) {
     filename.map((name) => utils.slugify(name));
     filename = filename.join('.');
     filename = validator.escape(filename).substr(0, 255);
-    var imgData = {
+    var uploadData = {
       fileName: tstamp + '-' + filename,
       origName: data.file.name,
       tstamp: tstamp,
@@ -223,18 +225,18 @@ ExpiringUploads.handleUpload = function(data, cb) {
 
     async.parallel({
       fs: function(next) {
-        ExpiringUploads.saveFile(data.file.path, imgData.fileName, next);
+        ExpiringUploads.saveFile(data.file.path, uploadData.fileName, next);
       },
       db: function(next) {
-        ExpiringUploads.writeToDB(imgData, next);
+        ExpiringUploads.writeToDB(uploadData, next);
       }
     }, function(err) {
       if (err) {
         return cb(err);
       }
       cb(null, {
-        url: nconf.get('upload_url') + imgData.hash + '/' + hexTstamp +
-             '/' + imgData.fileName.substring(14),
+        url: nconf.get('upload_url') + uploadData.hash + '/' + hexTstamp +
+             '/' + uploadData.fileName.substring(14),
         name: data.file.name
       });
     });
@@ -243,11 +245,11 @@ ExpiringUploads.handleUpload = function(data, cb) {
   }
 };
 
-ExpiringUploads.getHash = function(imgData) {
+ExpiringUploads.getHash = function(uploadData) {
   // key is generated from 'NodeBB secret'
   var key = nconf.get('secret');
   key = parseInt('0x' + key.substring(0, key.indexOf('-')), 16);
-  return xxh.hash(new Buffer(JSON.stringify(imgData)), key).toString(16);
+  return xxh.hash(new Buffer(JSON.stringify(uploadData)), key).toString(16);
 };
 
 ExpiringUploads.checkPermissions = function(data, cb) {
@@ -295,18 +297,18 @@ ExpiringUploads.saveFile = function(src, dest, cb) {
   is.pipe(os);
 };
 
-ExpiringUploads.writeToDB = function(imgData, cb) {
+ExpiringUploads.writeToDB = function(uploadData, cb) {
   async.waterfall([
     function(next) {
       db.incrObjectField('settings:expiring-uploads', 'lastID', next);
     },
     function(id, next) {
-      db.sortedSetAdd('expiring-uploads:ids', imgData.tstamp, id, function() {
+      db.sortedSetAdd('expiring-uploads:ids', uploadData.tstamp, id, function() {
         return next(null, id);
       });
     },
     function(id, next) {
-      db.setObject('expiring-uploads:' + id, imgData, next);
+      db.setObject('expiring-uploads:' + id, uploadData, next);
     }
   ],
   function(err) {
