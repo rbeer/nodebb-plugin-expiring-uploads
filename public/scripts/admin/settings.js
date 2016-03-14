@@ -107,7 +107,6 @@ define('expiring-uploads.settings', function() {
     }
   };
 
-  // Jedi Math Tricks <|:)
   UIElements.expDays.addEventListener('change', UIHandler.calcExpiration);
   UIElements.expWeeks.addEventListener('change', UIHandler.calcExpiration);
   UIElements.expMonths.addEventListener('change', UIHandler.calcExpiration);
@@ -119,9 +118,9 @@ define('expiring-uploads.settings', function() {
   UIElements.btnAddFiletype.addEventListener('click', UIHandler.addFileType);
   UIElements.lstFiletypes.addEventListener('dblclick', UIHandler.removeFileType);
 
-  UIElements.chkLinkText.addEventListener('click', function() {
+/*  UIElements.chkLinkText.addEventListener('click', function() {
     UIElements.linkText.disabled = !this.checked;
-  });
+  });*/
 
   UIElements.btnSave.addEventListener('click', UIHandler.saveSettings);
 

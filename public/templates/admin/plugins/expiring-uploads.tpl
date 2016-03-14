@@ -95,7 +95,7 @@
               </div>
             </div>
           </div>
-          <div class="form-group">
+          <div class="form-group hidden">
             <label for="fileTypeAdd">Link Text</label><br />
             <p>Show this text instead of the filename on the link.</p>
             <div class="row">
