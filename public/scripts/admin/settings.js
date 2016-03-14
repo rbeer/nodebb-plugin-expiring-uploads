@@ -66,7 +66,11 @@ define('expiring-uploads.settings', function() {
         this.value = this.value + '/';
       }
     },
-    addFileType: function() {
+    addFileType: function(event) {
+      if (event instanceof KeyboardEvent && !!event.code.indexOf('Enter')) {
+        return;
+      }
+      event.preventDefault();
       _addFileTypes(UIElements.txtFiletype.value);
       UIElements.txtFiletype.value = '';
     },
@@ -118,6 +122,7 @@ define('expiring-uploads.settings', function() {
     ['storagePath', 'blur', 'validateStoragePath'],
     ['btnAddFiletype', 'click', 'addFileType'],
     ['lstFiletypes', 'dblclick', 'removeFileType'],
+    ['txtFiletype', 'keydown', 'addFileType'],
     ['btnSave', 'click', 'saveSettings']/*,
     ['chkLinkText', 'click', 'toggleCustomLinkText']*/
   ];
@@ -128,9 +133,7 @@ define('expiring-uploads.settings', function() {
   };
   var _hookElements = function() {
     _hookMap.forEach((hook) =>
-      UIElements[hook[0]]
-      .addEventListener(hook[1], UIHandler[hook[2]])
-    );
+      UIElements[hook[0]].addEventListener(hook[1], UIHandler[hook[2]]));
   };
   var _FileTypes = {
 
