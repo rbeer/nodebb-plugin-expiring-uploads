@@ -4,7 +4,7 @@
 ((define) => {
   define('plugin/expiring-uploads/settings/time', () => {
     /**
-     * Calculates seconds from day/week/month values.
+     * Convert days/weeks/months values to seconds.
      * 1 month resolves to the Gregorian calendar's mean month length
      * of 30.44 days.
      * @param {string} days Positive int as string.
@@ -24,17 +24,23 @@
      */
     var validateCustomSeconds = (seconds) => seconds !== '';
 
-    var toDayWeekMonth = function(totalVal) {
-      var monthVal = Math.floor(totalVal / 2629743);
-      var weekVal = Math.floor((totalVal - (2629743 * monthVal)) / 604800);
-      var dayVal = Math.floor((totalVal - (2629743 * monthVal) -
-                              (604800 * weekVal)) / 86400);
-      return [dayVal, weekVal, monthVal];
+    var toDaysWeeksMonths = function(seconds) {
+      var months = Math.floor(seconds / 2629743);
+      var weeks = Math.floor((seconds - (2629743 * months)) / 604800);
+      var days = Math.floor((seconds - (2629743 * months) -
+                              (604800 * weeks)) / 86400);
+
+      return {
+        days: days,
+        weeks: weeks,
+        months: months,
+        isCustom: toSeconds(days, weeks, months) !== seconds
+      };
     };
     return {
       toSeconds: toSeconds,
       validateCustomSeconds: validateCustomSeconds,
-      toDayWeekMonth: toDayWeekMonth
+      toDaysWeeksMonths: toDaysWeeksMonths
     };
   });
 })(define);

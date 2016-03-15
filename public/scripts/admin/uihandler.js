@@ -8,81 +8,91 @@
     'plugin/expiring-uploads/settings/time'
   ];
   define('plugin/expiring-uploads/uihandler', deps, (UIElements, FileTypes, Time) => {
-    return {
-      setCustomSeconds: function() {
-        if (!Time.validateCustomSeconds(this.value)) {
-          app.alert({
-            type: 'warning',
-            alert_id: 'expiring-uploads-tstamp-invalid',
-            title: 'Invalid value',
-            message: 'Please enter numbers in the custom timestamp field, only!',
-            clickfn: function() {
-              UIElements.settings.expTstamp.focus();
-            }
-          });
-          this.value = this.defaultValue;
-        } else {
-          let dwm = Time.toDayWeekMonth(parseInt(this.value, 10));
-          UIElements.settings.expMonths.value = (dwm[2] <= 12) ? dwm[2] : 13;
-          UIElements.settings.expWeeks.value = (dwm[1] <= 3) ? dwm[1] : 0;
-          UIElements.settings.expDays.value = (dwm[0] <= 6) ? dwm[0] : 0;
-        }
-      },
-      onTimeSelectChange: function() {
-        UIElements.settings.expTstamp.value = Time.toSeconds(UIElements.settings.expDays.value,
-                                                              UIElements.settings.expWeeks.value,
-                                                              UIElements.settings.expMonths.value);
-      },
-      toggleCustomTimestamp: function() {
-        UIElements.settings.expTstamp.disabled = !this.checked;
-        UIElements.settings.expDays.disabled = UIElements.settings.expWeeks.disabled =
-          UIElements.settings.expMonths.disabled = this.checked;
-      },
-      validateStoragePath: function() {
-        if (this.value.substr(-1) !== '/') {
-          this.value = this.value + '/';
-        }
-      },
-      addFileType: function(event) {
-        if (event instanceof KeyboardEvent && !!event.code.indexOf('Enter')) {
-          return;
-        }
-        event.preventDefault();
-        FileTypes.parse(UIElements.settings.txtFiletype.value);
-        UIElements.settings.txtFiletype.value = '';
-      },
-      removeFileType: function() {
-        if (this.selectedIndex > -1) FileTypes.remove(this.selectedIndex);
-      },
-      saveSettings: function(event) {
-        event.preventDefault();
-        var ftypes = '.' + FileTypes.getAll().join(',.');
-        var data = {
-          storage: UIElements.settings.storagePath.value,
-          expireAfter: UIElements.settings.expTstamp.value,
-          customTstamp: UIElements.settings.chkCustomTstamp.checked,
-          expiringTypes: ftypes,
-          delFiles: UIElements.settings.chkDelFiles.checked,
-          linkText: UIElements.settings.linkText.value,
-          setLinkText: UIElements.settings.chkLinkText.checked
-        };
-        socket.emit('admin.plugins.ExpiringUploads.saveSettings', data, function(err) {
-          if (err) {
-            console.error(err);
-            return app.alertError(err.message);
+    var setCustomSeconds = function() {
+      if (!Time.validateCustomSeconds(this.value)) {
+        app.alert({
+          type: 'warning',
+          alert_id: 'expiring-uploads-tstamp-invalid',
+          title: 'Invalid value',
+          message: 'Please enter numbers in the custom timestamp field, only!',
+          clickfn: function() {
+            UIElements.settings.expTstamp.focus();
           }
-          app.alert({
-            type: 'success',
-            alert_id: 'expiring-uploads-saved',
-            title: 'Settings Saved',
-            message: 'Please reload your NodeBB to apply these settings',
-            clickfn: () => socket.emit('admin.reload')
-          });
         });
-      }/*,
-      toggleCustomLinkText: function() {
-        UIElements.settings.linkText.disabled = !this.checked;
-      }*/
-    }; // return
+        this.value = this.defaultValue;
+      } else {
+        let dwm = Time.toDaysWeeksMonths(parseInt(this.value, 10));
+        UIElements.settings.expMonths.value = (dwm.months <= 12) ? dwm.months : 13;
+        UIElements.settings.expWeeks.value = (dwm.weeks <= 3) ? dwm.weeks : 0;
+        UIElements.settings.expDays.value = (dwm.days <= 6) ? dwm.days : 0;
+        toggleCustomTimestamp.call({ checked: dwm.isCustom });
+        UIElements.settings.chkCustomTstamp.checked = dwm.isCustom;
+      }
+    };
+    var onTimeSelectChange = function() {
+      UIElements.settings.expTstamp.value = Time.toSeconds(UIElements.settings.expDays.value,
+                                                            UIElements.settings.expWeeks.value,
+                                                            UIElements.settings.expMonths.value);
+    };
+    var toggleCustomTimestamp = function() {
+      UIElements.settings.expTstamp.disabled = !this.checked;
+      UIElements.settings.expDays.disabled = UIElements.settings.expWeeks.disabled =
+        UIElements.settings.expMonths.disabled = this.checked;
+    };
+    var validateStoragePath = function() {
+      if (this.value.substr(-1) !== '/') {
+        this.value = this.value + '/';
+      }
+    };
+    var addFileType = function(event) {
+      if (event instanceof KeyboardEvent && !!event.code.indexOf('Enter')) {
+        return;
+      }
+      event.preventDefault();
+      FileTypes.parse(UIElements.settings.txtFiletype.value);
+      UIElements.settings.txtFiletype.value = '';
+    };
+    var removeFileType = function() {
+      if (this.selectedIndex > -1) FileTypes.remove(this.selectedIndex);
+    };
+    var saveSettings = function(event) {
+      event.preventDefault();
+      var ftypes = '.' + FileTypes.getAll().join(',.');
+      var data = {
+        storage: UIElements.settings.storagePath.value,
+        expireAfter: UIElements.settings.expTstamp.value,
+        customTstamp: UIElements.settings.chkCustomTstamp.checked,
+        expiringTypes: ftypes,
+        delFiles: UIElements.settings.chkDelFiles.checked,
+        linkText: UIElements.settings.linkText.value,
+        setLinkText: UIElements.settings.chkLinkText.checked
+      };
+      socket.emit('admin.plugins.ExpiringUploads.saveSettings', data, function(err) {
+        if (err) {
+          console.error(err);
+          return app.alertError(err.message);
+        }
+        app.alert({
+          type: 'success',
+          alert_id: 'expiring-uploads-saved',
+          title: 'Settings Saved',
+          message: 'Please reload your NodeBB to apply these settings',
+          clickfn: () => socket.emit('admin.reload')
+        });
+      });
+    };
+    /*,
+    var toggleCustomLinkText = function() {
+      UIElements.settings.linkText.disabled = !this.checked;
+    };*/
+    return {
+      setCustomSeconds: setCustomSeconds,
+      onTimeSelectChange: onTimeSelectChange,
+      toggleCustomTimestamp: toggleCustomTimestamp,
+      validateStoragePath: validateStoragePath,
+      addFileType: addFileType,
+      removeFileType: removeFileType,
+      saveSettings: saveSettings
+    };
   }); // define
 })(define, app, socket);
