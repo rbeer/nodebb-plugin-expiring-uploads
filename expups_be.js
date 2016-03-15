@@ -15,7 +15,7 @@ var file = require.main.require('./src/file');
 
 var ExpiringUploads = {
   storage: '/expiring_uploads/', // relative to nconf.get('base_dir')
-  hiddenTypes: [],
+  expiringTypes: [],
   expireAfter: 0,
   customTstamp: false,
   delFiles: false,
@@ -34,7 +34,7 @@ ExpiringUploads.init = function(app, cb) {
           config = {
             storage: ExpiringUploads.storage,
             expireAfter: ExpiringUploads.expireAfter,
-            hiddenTypes: ExpiringUploads.hiddenTypes,
+            expiringTypes: ExpiringUploads.expiringTypes,
             customTstamp: ExpiringUploads.customTstamp,
             delFiles: ExpiringUploads.delFiles,
             linkText: ExpiringUploads.linkText,
@@ -45,7 +45,7 @@ ExpiringUploads.init = function(app, cb) {
         } else {
           ExpiringUploads.storage = config.storage;
           ExpiringUploads.expireAfter = parseInt(config.expireAfter, 10);
-          ExpiringUploads.hiddenTypes = config.hiddenTypes.split(',');
+          ExpiringUploads.expiringTypes = config.expiringTypes.split(',');
           ExpiringUploads.customTstamp = (config.customTstamp === 'true');
           ExpiringUploads.delFiles = (config.delFiles === 'true');
           ExpiringUploads.linkText = config.linkText;
@@ -201,7 +201,7 @@ ExpiringUploads.handleUpload = function(data, cb) {
   if (!ExpiringUploads.checkPermissions(data, cb)) {
     return;
   }
-  if (ExpiringUploads.hiddenTypes.indexOf(path.extname(data.file.name)) > -1) {
+  if (ExpiringUploads.expiringTypes.indexOf(path.extname(data.file.name)) > -1) {
     var expTstamp = Date.now() + ExpiringUploads.expireAfter;
     // only used for the link; all internals use the numeric expTstamp
     var hexTstamp = expTstamp.toString(16);

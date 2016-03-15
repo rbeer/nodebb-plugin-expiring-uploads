@@ -35,14 +35,15 @@ Admin.addMenuItem = function(custom_header, cb) {
 Admin.render = function(req, res) {
   var ExpiringUploads = module.parent.exports;
   // templates.js can only access objects in arrays - I think. :/
-  var types = ExpiringUploads.hiddenTypes.map(function(type) {
+  var types = ExpiringUploads.expiringTypes
+.map(function(type) {
     return {ftype: type};
   });
   var tplData = {
     csrf: req.csrfToken(),
     storagePath: ExpiringUploads.storage,
     expTstamp: ExpiringUploads.expireAfter / 1000, // humans do time in sec...
-    hiddenTypes: types,
+    expiringTypes: types,
     customTstamp: ExpiringUploads.customTstamp,
     delFiles: ExpiringUploads.delFiles,
     basePath: nconf.get('base_dir'),
@@ -57,7 +58,7 @@ Admin.saveSettings = function(settings, cb) {
   var dbData = {
     storage: settings.storage,
     expireAfter: parseInt(settings.expireAfter, 10) * 1000, // ...js in msec
-    hiddenTypes: settings.hiddenTypes,
+    expiringTypes: settings.expiringTypes,
     customTstamp: settings.customTstamp,
     delFiles: settings.delFiles,
     linkText: settings.linkText,
@@ -79,7 +80,7 @@ Admin.saveSettings = function(settings, cb) {
     }
     ExpiringUploads.storage = dbData.storage;
     ExpiringUploads.expireAfter = dbData.expireAfter;
-    ExpiringUploads.hiddenTypes = dbData.hiddenTypes.split(',');
+    ExpiringUploads.expiringTypes = dbData.expiringTypes.split(',');
     ExpiringUploads.customTstamp = dbData.customTstamp;
     ExpiringUploads.delFiles = dbData.delFiles;
     ExpiringUploads.linkText = dbData.linkText;

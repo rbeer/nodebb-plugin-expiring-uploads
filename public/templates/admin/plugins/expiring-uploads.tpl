@@ -87,9 +87,9 @@
               </div>
               <div class="col-lg-7">
                 <select id="lstFiletypes" class="form-control" multiple>
-                  <!-- BEGIN hiddenTypes -->
-                  <option>{hiddenTypes.ftype}</option>
-                  <!-- END hiddenTypes -->
+                  <!-- BEGIN expiringTypes -->
+                  <option>{expiringTypes.ftype}</option>
+                  <!-- END expiringTypes -->
                 </select>
                 <small>Double click list entries to delete!</small>
               </div>

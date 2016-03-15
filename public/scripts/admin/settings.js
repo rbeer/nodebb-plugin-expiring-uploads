@@ -1,5 +1,5 @@
 'use strict';
-/* globals app, socket config, define */
+/* globals app, socket, define */
 
 define('expiring-uploads.settings', function() {
 
@@ -83,7 +83,7 @@ define('expiring-uploads.settings', function() {
         storage: UIElements.storagePath.value,
         expireAfter: UIElements.expTstamp.value,
         customTstamp: UIElements.chkCustomTstamp.checked,
-        hiddenTypes: ftypes,
+        expiringTypes: ftypes,
         delFiles: UIElements.chkDelFiles.checked,
         linkText: UIElements.linkText.value,
         setLinkText: UIElements.chkLinkText.checked
