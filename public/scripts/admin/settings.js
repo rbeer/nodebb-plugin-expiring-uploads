@@ -79,8 +79,7 @@ define('expiring-uploads.settings', function() {
     },
     saveSettings: function(e) {
       var ftypes = '.' + _FileTypes.types.join(',.');
-      $.post(config.relative_path + '/api/admin/plugins/expiring-uploads/save', {
-        _csrf: config.csrf_token,
+      var data = {
         storage: UIElements.storagePath.value,
         expireAfter: UIElements.expTstamp.value,
         customTstamp: UIElements.chkCustomTstamp.checked,
@@ -88,20 +87,18 @@ define('expiring-uploads.settings', function() {
         delFiles: UIElements.chkDelFiles.checked,
         linkText: UIElements.linkText.value,
         setLinkText: UIElements.chkLinkText.checked
-      }, function(data) {
-        if (data === 'OK') {
-          app.alert({
-            type: 'success',
-            alert_id: 'expiring-uploads-saved',
-            title: 'Settings Saved',
-            message: 'Please reload your NodeBB to apply these settings',
-            clickfn: function() {
-              socket.emit('admin.reload');
-            }
-          });
-        } else {
-          app.alertError('Error while saving settings: ' + data);
+      };
+      socket.emit('admin.plugins.ExpiringUploads.saveSettings', data, function(err) {
+        if (err) {
+          return app.alertError(err.message);
         }
+        app.alert({
+          type: 'success',
+          alert_id: 'expiring-uploads-saved',
+          title: 'Settings Saved',
+          message: 'Please reload your NodeBB to apply these settings',
+          clickfn: () => socket.emit('admin.reload')
+        });
       });
       e.preventDefault();
     }/*,
