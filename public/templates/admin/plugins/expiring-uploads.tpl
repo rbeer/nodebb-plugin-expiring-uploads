@@ -119,8 +119,12 @@
 </div>
 
 <script type="text/javascript" src="{relative_path}/plugins/nodebb-plugin-expiring-uploads/scripts/admin/settings.js"></script>
+<script type="text/javascript" src="{relative_path}/plugins/nodebb-plugin-expiring-uploads/scripts/admin/settings/filetypes.js"></script>
+<script type="text/javascript" src="{relative_path}/plugins/nodebb-plugin-expiring-uploads/scripts/admin/settings/time.js"></script>
+<script type="text/javascript" src="{relative_path}/plugins/nodebb-plugin-expiring-uploads/scripts/admin/uielements.js"></script>
+<script type="text/javascript" src="{relative_path}/plugins/nodebb-plugin-expiring-uploads/scripts/admin/uihandler.js"></script>
 <script defer>
-  require(['expiring-uploads.settings'], (settings) => {
+  require(['plugin/expiring-uploads/settings'], (settings) => {
     console.log(settings);
   });
 </script>
