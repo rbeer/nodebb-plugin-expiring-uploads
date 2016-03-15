@@ -17,7 +17,6 @@ var ExpiringUploads = {
   storage: '/expiring_uploads/', // relative to nconf.get('base_dir')
   expiringTypes: [],
   expireAfter: 0,
-  customTstamp: false,
   delFiles: false,
   delInterval: undefined,
   linkText: '',
@@ -35,7 +34,6 @@ ExpiringUploads.init = function(app, cb) {
             storage: ExpiringUploads.storage,
             expireAfter: ExpiringUploads.expireAfter,
             expiringTypes: ExpiringUploads.expiringTypes,
-            customTstamp: ExpiringUploads.customTstamp,
             delFiles: ExpiringUploads.delFiles,
             linkText: ExpiringUploads.linkText,
             setLinkText: ExpiringUploads.setLinkText,
@@ -46,7 +44,6 @@ ExpiringUploads.init = function(app, cb) {
           ExpiringUploads.storage = config.storage;
           ExpiringUploads.expireAfter = parseInt(config.expireAfter, 10);
           ExpiringUploads.expiringTypes = config.expiringTypes.split(',');
-          ExpiringUploads.customTstamp = (config.customTstamp === 'true');
           ExpiringUploads.delFiles = (config.delFiles === 'true');
           ExpiringUploads.linkText = config.linkText;
           ExpiringUploads.setLinkText = (config.setLinkText === 'true');

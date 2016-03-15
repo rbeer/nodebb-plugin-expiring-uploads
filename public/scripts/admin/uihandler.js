@@ -61,7 +61,6 @@
       var data = {
         storage: UIElements.settings.storagePath.value,
         expireAfter: UIElements.settings.expTstamp.value,
-        customTstamp: UIElements.settings.chkCustomTstamp.checked,
         expiringTypes: ftypes,
         delFiles: UIElements.settings.chkDelFiles.checked,
         linkText: UIElements.settings.linkText.value,

@@ -44,7 +44,6 @@ Admin.render = function(req, res) {
     storagePath: ExpiringUploads.storage,
     expTstamp: ExpiringUploads.expireAfter / 1000, // humans do time in sec...
     expiringTypes: types,
-    customTstamp: ExpiringUploads.customTstamp,
     delFiles: ExpiringUploads.delFiles,
     basePath: nconf.get('base_dir'),
     linkText: ExpiringUploads.linkText,
@@ -59,7 +58,6 @@ Admin.saveSettings = function(settings, cb) {
     storage: settings.storage,
     expireAfter: parseInt(settings.expireAfter, 10) * 1000, // ...js in msec
     expiringTypes: settings.expiringTypes,
-    customTstamp: settings.customTstamp,
     delFiles: settings.delFiles,
     linkText: settings.linkText,
     setLinkText: settings.setLinkText
@@ -81,7 +79,6 @@ Admin.saveSettings = function(settings, cb) {
     ExpiringUploads.storage = dbData.storage;
     ExpiringUploads.expireAfter = dbData.expireAfter;
     ExpiringUploads.expiringTypes = dbData.expiringTypes.split(',');
-    ExpiringUploads.customTstamp = dbData.customTstamp;
     ExpiringUploads.delFiles = dbData.delFiles;
     ExpiringUploads.linkText = dbData.linkText;
     ExpiringUploads.setLinkText = dbData.setLinkText;

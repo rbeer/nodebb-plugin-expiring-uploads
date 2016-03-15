@@ -1,5 +1,9 @@
 <div class="row">
   <div class="col-lg-8">
+    <ul class="nav nav-tabs">
+      <li role="presentation" class="active"><a href="#">Settings</a></li>
+      <li role="presentation"><a href="#">Uploads</a></li>
+    </ul>
     <div class="panel panel-default">
       <div class="panel-heading">Settings</div>
       <div class="panel-body">
@@ -11,7 +15,7 @@
               <span class="input-group-addon">
                 <label for="expDays">Days</label>
               </span>
-              <select class="form-control" id="expDays"<!-- IF customTstamp --> disabled<!-- ENDIF customTstamp -->>
+              <select class="form-control" id="expDays">
                 <option value="0">---</option>
                 <option>1</option>
                 <option>2</option>
@@ -23,7 +27,7 @@
               <span class="input-group-addon">
                 <label for="expWeeks">Weeks</label>
               </span>
-              <select class="form-control" id="expWeeks"<!-- IF customTstamp --> disabled<!-- ENDIF customTstamp -->>
+              <select class="form-control" id="expWeeks">
                 <option value="0">---</option>
                 <option>1</option>
                 <option>2</option>
@@ -32,7 +36,7 @@
               <span class="input-group-addon">
                 <label for="expMonths">Months</label>
               </span>
-              <select class="form-control" id="expMonths"<!-- IF customTstamp --> disabled<!-- ENDIF customTstamp -->>
+              <select class="form-control" id="expMonths">
                 <option value="0">---</option>
                 <option>1</option>
                 <option>2</option>
@@ -52,11 +56,11 @@
             <div class="input-group">
               <div class="input-group-addon">
                 <label for="chkCustomTstamp" style="margin-bottom: -1px;">
-                  <input type="checkbox" id="chkCustomTstamp"<!-- IF customTstamp --> checked<!-- ENDIF customTstamp -->>
+                  <input type="checkbox" id="chkCustomTstamp">
                   Custom
                 </label>
               </div>
-              <input type="number" class="form-control" id="expTstamp" value="{expTstamp}" min="0"<!-- IF !customTstamp --> disabled<!-- ENDIF !customTstamp -->/>
+              <input type="number" class="form-control" id="expTstamp" value="{expTstamp}" min="0"/>
               <span class="input-group-addon">seconds</span>
             </div>
           </div>
@@ -69,8 +73,7 @@
             </div>
             <br />
             <label for="chkDelFiles">
-              <input type="checkbox" class="form-control" id="chkDelFiles"<!-- IF delFiles --> checked<!-- ENDIF delFiles -->>
-              Delete Files when they are expired.
+              <input type="checkbox" id="chkDelFiles"<!-- IF delFiles --> checked<!-- ENDIF delFiles -->>Delete Files when they are expired.
             </label>
           </div>
           <div class="form-group">
