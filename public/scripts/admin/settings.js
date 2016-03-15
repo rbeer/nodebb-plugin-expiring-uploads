@@ -78,11 +78,7 @@ define('expiring-uploads.settings', function() {
       if (this.selectedIndex > -1) _FileTypes.remove(this.selectedIndex);
     },
     saveSettings: function(e) {
-      var ftypes = '';
-      for (var i = 0; i < UIElements.lstFiletypes.options.length; i++) {
-        ftypes = ftypes + UIElements.lstFiletypes.options[i].value + ',';
-      }
-      ftypes = ftypes.substring(0, ftypes.length - 1);
+      var ftypes = '.' + _FileTypes.types.join(',.');
       $.post(config.relative_path + '/api/admin/plugins/expiring-uploads/save', {
         _csrf: config.csrf_token,
         storage: UIElements.storagePath.value,
