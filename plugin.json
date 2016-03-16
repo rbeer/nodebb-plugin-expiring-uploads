@@ -9,7 +9,6 @@
   "languages": "public/locales",
   "defaultLang": "en_GB",
   "templates": "public/templates",
-  "scripts": ["public/scripts/"],
   "staticDirs": {"scripts": "public/scripts/"},
   "hooks": [
     { "hook": "filter:admin.header.build", "method": "Admin.addMenuItem" },

@@ -36,9 +36,9 @@ Admin.render = function(req, res) {
   var ExpiringUploads = module.parent.exports;
   // templates.js can only access objects in arrays - I think. :/
   var types = ExpiringUploads.expiringTypes
-.map(function(type) {
-    return {ftype: type};
-  });
+              .map(function(type) {
+                return {ftype: type};
+              });
   var tplData = {
     csrf: req.csrfToken(),
     storagePath: ExpiringUploads.storage,

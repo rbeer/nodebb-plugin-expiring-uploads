@@ -8,6 +8,11 @@
     'plugin/expiring-uploads/settings/time'
   ];
   define('plugin/expiring-uploads/uihandler', deps, (UIElements, FileTypes, Time) => {
+  /**
+   * ---------------------------------------------------------------------------
+   *                                 Settings Tab
+   * ---------------------------------------------------------------------------
+   */
 
     /**
      * Sets days/weeks/months select fields values
@@ -122,6 +127,17 @@
       UIElements.settings.linkText.disabled = !this.checked;
     };*/
 
+  /**
+   * ---------------------------------------------------------------------------
+   *                                 Uploads Tab
+   * ---------------------------------------------------------------------------
+   */
+
+    /**
+     * User clicked clean button
+     */
+    var clean = (a) => a;
+
     /**
      * UI Element handlers
      * @typedef {UIHandler}
@@ -134,13 +150,18 @@
      * @property {function} saveSettings          - Saves settings
      */
     return {
-      setCustomSeconds: setCustomSeconds,
-      onTimeSelectChange: onTimeSelectChange,
-      toggleCustomTimestamp: toggleCustomTimestamp,
-      validateStoragePath: validateStoragePath,
-      addFileType: addFileType,
-      removeFileType: removeFileType,
-      saveSettings: saveSettings
+      uploads: {
+        clean: clean
+      },
+      settings: {
+        setCustomSeconds: setCustomSeconds,
+        onTimeSelectChange: onTimeSelectChange,
+        toggleCustomTimestamp: toggleCustomTimestamp,
+        validateStoragePath: validateStoragePath,
+        addFileType: addFileType,
+        removeFileType: removeFileType,
+        saveSettings: saveSettings
+      }
     };
   }); // define
 })(define, app, socket);

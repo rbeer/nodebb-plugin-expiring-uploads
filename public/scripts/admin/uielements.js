@@ -1,15 +1,17 @@
 'use strict';
 /* globals define */
 
-((define) => {
+((define, $) => {
   define('plugin/expiring-uploads/uielements', () => {
     /**
      * References to UI DOM Elements
      * @typedef {UIElements}
      */
     return {
-      tabUploads: document.getElementById('tabUploads'),
-      tabSettings: document.getElementById('tabSettings'),
+      uploads: {
+        tblUploads: document.getElementById('tblUploads'),
+        hidingTitle: document.getElementById('tblHeader')
+      },
       settings: {
         // Expiration Time
         expDays: document.getElementById('expDays'),
@@ -32,4 +34,4 @@
       }
     };
   });
-})(define);
+})(define, $);

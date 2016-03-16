@@ -24,19 +24,20 @@
 
     var _init = function() {
       _hookElements();
-      UIHandler.setCustomSeconds.call({
+      UIHandler.settings.setCustomSeconds.call({
         value: UIElements.settings.expTstamp.value
       });
     };
     var _hookElements = function() {
       _hookMap.forEach((hook) =>
-        UIElements.settings[hook[0]].addEventListener(hook[1], UIHandler[hook[2]]));
+        UIElements.settings[hook[0]]
+        .addEventListener(hook[1], UIHandler.settings[hook[2]]));
     };
 
     _init();
     return {
-      _elements: UIElements,
-      _handler: UIHandler
+      _uielements: UIElements.settings,
+      _uihandler: UIHandler.settings
     };
   });
 })(define);
