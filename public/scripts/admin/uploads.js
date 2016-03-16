@@ -296,8 +296,6 @@
 
     var _hookElements = function() {
       _hookUploadsTab();
-      document.querySelector('[aria-controls=settings]')
-      .addEventListener('click', _hookUploadsTab);
       UIElements.uploads.tblUploads.parentElement
       .addEventListener('scroll', UIHandler.uploads.scrollTable);
     };
