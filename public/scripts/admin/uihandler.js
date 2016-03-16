@@ -8,6 +8,12 @@
     'plugin/expiring-uploads/settings/time'
   ];
   define('plugin/expiring-uploads/uihandler', deps, (UIElements, FileTypes, Time) => {
+
+    /**
+     * Sets days/weeks/months select fields values
+     * Sets custom timestamp checkbox
+     * @this {expTstamp}
+     */
     var setCustomSeconds = function() {
       if (!Time.validateCustomSeconds(this.value)) {
         app.alert({
@@ -29,21 +35,41 @@
         UIElements.settings.chkCustomTstamp.checked = dwm.isCustom;
       }
     };
+
+    /**
+     * Sets expTstamp value when days/weeks/months selects change
+     * @this {UIElements.settings.expDays|UIElements.settings.expWeeks|UIElements.settings.expMonths}
+     */
     var onTimeSelectChange = function() {
       UIElements.settings.expTstamp.value = Time.toSeconds(UIElements.settings.expDays.value,
                                                             UIElements.settings.expWeeks.value,
                                                             UIElements.settings.expMonths.value);
     };
+
+    /**
+     * Toggles disabled state of time selects and custom input field
+     * @this {UIElements.settings.chkCustomTstamp}
+     */
     var toggleCustomTimestamp = function() {
       UIElements.settings.expTstamp.disabled = !this.checked;
       UIElements.settings.expDays.disabled = UIElements.settings.expWeeks.disabled =
         UIElements.settings.expMonths.disabled = this.checked;
     };
+
+    /**
+     * Validates and corrects storage path input value
+     * @this {storagePath}
+     */
     var validateStoragePath = function() {
       if (this.value.substr(-1) !== '/') {
         this.value = this.value + '/';
       }
     };
+
+    /**
+     * Adds filetypes from text input to list
+     * @param {MouseEvent|KeyboardEvent} event
+     */
     var addFileType = function(event) {
       if (event instanceof KeyboardEvent && !!event.code.indexOf('Enter')) {
         return;
@@ -52,9 +78,19 @@
       FileTypes.parse(UIElements.settings.txtFiletype.value);
       UIElements.settings.txtFiletype.value = '';
     };
+
+    /**
+     * Removes filetypes from list
+     * @this {lstFiletypes}
+     */
     var removeFileType = function() {
       if (this.selectedIndex > -1) FileTypes.remove(this.selectedIndex);
     };
+
+    /**
+     * Saves settings
+     * @param  {MouseEvent} event
+     */
     var saveSettings = function(event) {
       event.preventDefault();
       var ftypes = '.' + FileTypes.getAll().join(',.');
@@ -80,10 +116,23 @@
         });
       });
     };
+
     /*,
     var toggleCustomLinkText = function() {
       UIElements.settings.linkText.disabled = !this.checked;
     };*/
+
+    /**
+     * UI Element handlers
+     * @typedef {UIHandler}
+     * @property {function} setCustomSeconds      - Sets days/weeks/months select fields values
+     * @property {function} onTimeSelectChange    - Sets expTstamp value when days/weeks/months selects change
+     * @property {function} toggleCustomTimestamp - Toggles disabled state of time selects and custom input field
+     * @property {function} validateStoragePath   - Validates and corrects storage path input value
+     * @property {function} addFileType           - Adds filetypes from text input to list
+     * @property {function} removeFileType        - Removes filetypes from list
+     * @property {function} saveSettings          - Saves settings
+     */
     return {
       setCustomSeconds: setCustomSeconds,
       onTimeSelectChange: onTimeSelectChange,

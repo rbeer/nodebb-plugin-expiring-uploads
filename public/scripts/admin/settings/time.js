@@ -51,6 +51,13 @@
         isCustom: toSeconds(days, weeks, months) !== seconds
       };
     };
+    /**
+     * Functions for expiration time part of settings UI
+     * @typedef {Time}
+     * @property {function} toSeconds Converts days/weeks/months to seconds
+     * @property {function} validateCustomSeconds Check whether custom seconds string is valid
+     * @property {function} toDaysWeeksMonths Converts seconds to DaysWeeksMonths object
+     */
     return {
       toSeconds: toSeconds,
       validateCustomSeconds: validateCustomSeconds,

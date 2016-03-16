@@ -3,7 +3,13 @@
 
 ((define) => {
   define('plugin/expiring-uploads/uielements', () => {
+    /**
+     * References to UI DOM Elements
+     * @typedef {UIElements}
+     */
     return {
+      tabUploads: document.getElementById('tabUploads'),
+      tabSettings: document.getElementById('tabSettings'),
       settings: {
         // Expiration Time
         expDays: document.getElementById('expDays'),
