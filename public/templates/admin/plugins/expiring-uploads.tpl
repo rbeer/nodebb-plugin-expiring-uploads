@@ -7,6 +7,12 @@
   padding-bottom: 0;
   padding-right: 30px;
 }
+#tblUploads tr:not(.expiredFile) .fa-check {
+  color: #4CAF50;
+}
+#tblUploads tr:not(.expiredFile) .fa-times {
+  color: #FF5722;
+}
 th {
   text-align: center;
 }
@@ -28,6 +34,12 @@ th {
 }
 .expiredFile:hover {
   color: #666;
+}
+.expiredFile:hover .fa-times {
+  color: #FF5722;
+}
+.expiredFile:hover .fa-check {
+  color: #4CAF50;
 }
   
 </style>
