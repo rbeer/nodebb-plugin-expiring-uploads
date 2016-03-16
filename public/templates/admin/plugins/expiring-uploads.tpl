@@ -13,6 +13,9 @@
 #tblUploads tr:not(.expiredFile) .fa-times {
   color: #FF5722;
 }
+#tblUploads tr:not(.expiredFile) .fa-minus {
+  color: #FF5722;
+}
 th {
   text-align: center;
 }
@@ -40,6 +43,9 @@ th {
 }
 .expiredFile:hover .fa-check {
   color: #4CAF50;
+}
+.expiredFile:hover .fa-minus {
+  color: #FF5722;
 }
   
 </style>
