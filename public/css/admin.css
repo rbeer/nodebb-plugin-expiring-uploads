@@ -1,0 +1,51 @@
+#tblUploads td {
+  overflow-wrap: break-word;
+  max-width: 50px;
+}
+#tblHeader {
+  padding-bottom: 0;
+  padding-right: 30px;
+}
+#tblUploads tr:not(.expiredFile) .fa-check {
+  color: #4CAF50;
+}
+#tblUploads tr:not(.expiredFile) .fa-times {
+  color: #FF5722;
+}
+#tblUploads tr:not(.expiredFile) .fa-minus {
+  color: #FF5722;
+}
+#tblUploads .fa-times {
+  cursor: pointer;
+}
+th {
+  text-align: center;
+}
+.iconDelete {
+  text-align: center;
+}
+.iconFS {
+  text-align: center;
+}
+.textExpiration {
+  text-align: center;
+  text-align-last: right;
+}
+.centerMultiline {
+  text-align: center;
+}
+.expiredFile {
+  color: #CCC;
+}
+.expiredFile:hover {
+  color: #666;
+}
+.expiredFile:hover .fa-times {
+  color: #FF5722;
+}
+.expiredFile:hover .fa-check {
+  color: #4CAF50;
+}
+.expiredFile:hover .fa-minus {
+  color: #FF5722;
+}

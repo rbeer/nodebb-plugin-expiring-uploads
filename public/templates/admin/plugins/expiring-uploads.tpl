@@ -1,57 +1,3 @@
-<style type="text/css" media="screen">
-#tblUploads td {
-  overflow-wrap: break-word;
-  max-width: 50px;
-}
-#tblHeader {
-  padding-bottom: 0;
-  padding-right: 30px;
-}
-#tblUploads tr:not(.expiredFile) .fa-check {
-  color: #4CAF50;
-}
-#tblUploads tr:not(.expiredFile) .fa-times {
-  color: #FF5722;
-}
-#tblUploads tr:not(.expiredFile) .fa-minus {
-  color: #FF5722;
-}
-#tblUploads .fa-times {
-  cursor: pointer;
-}
-th {
-  text-align: center;
-}
-.iconDelete {
-  text-align: center;
-}
-.iconFS {
-  text-align: center;
-}
-.textExpiration {
-  text-align: center;
-  text-align-last: right;
-}
-.centerMultiline {
-  text-align: center;
-}
-.expiredFile {
-  color: #CCC;
-}
-.expiredFile:hover {
-  color: #666;
-}
-.expiredFile:hover .fa-times {
-  color: #FF5722;
-}
-.expiredFile:hover .fa-check {
-  color: #4CAF50;
-}
-.expiredFile:hover .fa-minus {
-  color: #FF5722;
-}
-  
-</style>
 <div class="row">
   <div class="col-lg-8">
     <ul class="nav nav-tabs" role="tablist">
@@ -220,3 +166,4 @@ th {
 <script type="text/javascript" src="{relative_path}/plugins/nodebb-plugin-expiring-uploads/scripts/admin/uielements.js"></script>
 <script type="text/javascript" src="{relative_path}/plugins/nodebb-plugin-expiring-uploads/scripts/admin/uihandler.js"></script>
 <script type="text/javascript" src="{relative_path}/plugins/nodebb-plugin-expiring-uploads/scripts/admin/uploads/table.js"></script>
+<link rel="stylesheet" type="text/css" href="{relative_path}/plugins/nodebb-plugin-expiring-uploads/css/admin.css">
