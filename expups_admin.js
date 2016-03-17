@@ -3,9 +3,11 @@
 var db = require.main.require('./src/database');
 var nconf = require.main.require('nconf');
 var AdminSocket = require.main.require('./src/socket.io/admin');
+const UIError = require('./lib/uierror');
 var Admin = {};
+
 Admin.init = function(app, cb) {
-  Admin.createSocket();
+  Admin._initSockets();
   // admin routes
   app.router.get('/admin/plugins/expiring-uploads',
                  app.middleware.applyCSRF, app.middleware.admin.buildHeader,
@@ -16,10 +18,30 @@ Admin.init = function(app, cb) {
   cb(null, app);
 };
 
-Admin.createSocket = function() {
+Admin._initSockets = function() {
   AdminSocket.plugins.ExpiringUploads = {};
   AdminSocket.plugins.ExpiringUploads.saveSettings = (socket, data, cb) => {
     Admin.saveSettings(data, cb);
+  };
+  AdminSocket.plugins.ExpiringUploads.getFileData = (socket, data, cb) => {
+    let keys = Array(data.end - data.start).fill('').map((key, idx) =>
+      'expiring-uploads:' + (data.start + idx));
+    db.getObjects(keys, (err, fileData) => {
+      if (err) {
+        return cb(new UIError('Error while retrieving files data from DB.',
+                              'EDBREAD', err));
+      }
+      console.log(fileData);
+    });
+  };
+  AdminSocket.plugins.ExpiringUploads.deleteFile = (socket, id, cb) => {
+    
+    db.setObject('expiring-uploads:' + id, (err) => {
+      if (err) {
+        return cb(new UIError('Error while deleting file from DB.',
+                              'EDBWRITE', err));
+      }
+    });
   };
 };
 
@@ -89,7 +111,7 @@ Admin.saveSettings = function(settings, cb) {
       ExpiringUploads.createStorage(function(err) {
         if (err) {
           let e = new Error('Creating storage directory failed.');
-          e.code = 'ECREATESTORAGE';
+          e.code = 'EFSWRITE';
           e.reason = err;
           return cb(e);
         }

@@ -1,6 +1,6 @@
 'use strict';
 
-var fs = require('fs');
+var fs = require('fs')
 var path = require('path');
 var xxh = require('xxhash');
 var nconf = require.main.require('nconf');
@@ -11,7 +11,6 @@ var utils = require.main.require('./public/src/utils');
 var meta = require.main.require('./src/meta');
 var validator = require.main.require('validator');
 var file = require.main.require('./src/file');
-// var PluginSocket = require.main.require('./src/socket.io/plugins');
 
 var ExpiringUploads = {
   storage: '/expiring_uploads/', // relative to nconf.get('base_dir')
