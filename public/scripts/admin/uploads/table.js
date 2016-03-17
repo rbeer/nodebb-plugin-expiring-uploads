@@ -16,9 +16,9 @@
      *                                  undefined if deleted
      * @property {number}  expiration - Timestamp of expiration
      */
-    
+
     /**
-     * Retrieves meta data of files in the DB.
+     * Retrieves meta data of files from the DB.
      * Optional parameters start, end can define a range.
      * @param  {?number} start        - Id of file to start request range
      * @param  {?number} end          - Id of file to end request range
@@ -32,6 +32,19 @@
           if(err) return cb(err);
           return cb(null, fileData);
         });
+    };
+
+    var _cache = [];
+    /**
+     * Cache element
+     * @typedef {CacheFile}
+     * @param {HTMLTableRowElement} trElement
+     * @param {ExpiringFile}        data
+     */
+    var CacheFile = function(trElement, data) {
+      this.element = trElement;
+      this.data = data;
+      return this;
     };
 
     /**
@@ -48,7 +61,24 @@
       tr.appendChild(columns.createExpiration(data.expiration));
       tr.appendChild(columns.createDelete());
       isExpired(data.expiration) ? tr.className = 'expiredFile' : void 0;
+      tr.dataset.cache = _cache.push(new CacheFile(tr, data)) - 1;
+      _hookRowButtons(tr);
       return tr;
+    };
+
+    var removeRow = function(trElement) {
+      var cacheId = trElement.dataset.cache;
+      _cache[cacheId] = null;
+      trElement.remove();
+    };
+
+    var _hookRowButtons = (trElement) => {
+      trElement.querySelector('.fa-times').addEventListener('click',
+                                                            _removeEntry);
+    };
+
+    var _removeEntry = function(event) {
+      removeRow(event.path[2]);
     };
 
     var isExpired = (tstamp) => tstamp - Date.now() < 1;
@@ -73,7 +103,8 @@
       createExpiration: function(expiration) {
         let td = document.createElement('td');
         let exp = document.createElement('div');
-        exp.className = 'textExpiration ' + (isExpired(expiration) ? 'expired' : 'active');
+        exp.className = 'textExpiration ' + (isExpired(expiration) ?
+                                             'expired' : 'active');
         exp.innerText = new Date(expiration).toLocaleString();
         td.appendChild(exp);
         return td;
@@ -87,7 +118,12 @@
       }
     };
 
-    var createRows = function(fileData) {
+    /**
+     * Creates a <tbody> with rows out of fileData
+     * @param  {Array.<ExpiringFile>} fileData
+     * @return {HTMLTableSectionElement}
+     */
+    var addRows = function(fileData) {
       var tbody = document.createElement('tbody');
       fileData = fileData.sort((a, b) => a.id > b.id);
       for (let file of fileData) {
@@ -98,10 +134,11 @@
     };
 
     var loadTable = function(fileData) {
-      return createRows(fileData);
+      return addRows(fileData);
     };
 
     return {
+      _cache: _cache,
       loadTable: loadTable,
       createRow: createRow,
       getFileData: getFileData

@@ -16,6 +16,9 @@
 #tblUploads tr:not(.expiredFile) .fa-minus {
   color: #FF5722;
 }
+#tblUploads .fa-times {
+  cursor: pointer;
+}
 th {
   text-align: center;
 }
