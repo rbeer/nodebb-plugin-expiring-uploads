@@ -34,7 +34,19 @@
         });
     };
 
-    var _cache = [];
+    var _Cache = new function() {
+      this._cache = [];
+      this.remove = function(cacheId) {
+        this._cache[cacheId] = null;
+      };
+      this.add = function(cacheFile) {
+        return this._cache.push(cacheFile);
+      };
+      this.getId = function(cacheId) {
+        return this._cache[cacheId].data.id;
+      };
+      return this;
+    }();
     /**
      * Cache element
      * @typedef {CacheFile}
@@ -61,14 +73,14 @@
       tr.appendChild(columns.createExpiration(data.expiration));
       tr.appendChild(columns.createDelete());
       isExpired(data.expiration) ? tr.className = 'expiredFile' : void 0;
-      tr.dataset.cache = _cache.push(new CacheFile(tr, data)) - 1;
+      tr.dataset.cache = _Cache.add(new CacheFile(tr, data)) - 1;
       _hookRowButtons(tr);
       return tr;
     };
 
     var removeRow = function(trElement) {
       var cacheId = trElement.dataset.cache;
-      _cache[cacheId] = null;
+      _Cache.remove(cacheId);
       trElement.remove();
     };
 
@@ -78,7 +90,12 @@
     };
 
     var _removeEntry = function(event) {
-      removeRow(event.path[2]);
+      var trElement = event.path[2];
+      socket.emit('admin.plugins.ExpiringUploads.deleteFile',
+                  _Cache.getId(trElement.dataset.cache), (err) => {
+                    if (err) return app.alertError(err.message);
+                  });
+      removeRow(trElement);
     };
 
     var isExpired = (tstamp) => tstamp - Date.now() < 1;
@@ -138,7 +155,7 @@
     };
 
     return {
-      _cache: _cache,
+      _Cache: _Cache,
       loadTable: loadTable,
       createRow: createRow,
       getFileData: getFileData
