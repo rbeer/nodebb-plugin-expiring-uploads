@@ -12,6 +12,8 @@ var meta = require.main.require('./src/meta');
 var validator = require.main.require('validator');
 var file = require.main.require('./src/file');
 
+const settings = require('./lib/settings');
+
 var ExpiringUploads = {
   storage: '/expiring_uploads/', // relative to nconf.get('base_dir')
   expiringTypes: [],
