@@ -11,16 +11,17 @@ var utils = require.main.require('./public/src/utils');
 var meta = require.main.require('./src/meta');
 var validator = require.main.require('validator');
 var file = require.main.require('./src/file');
-// -------------
+// ---------------------------
 const settings = require('./lib/settings');
 const FileHandler = require('./lib/filehandler');
 const filehandler = new FileHandler();
 const DB = require('./lib/dbwrap');
+// ~~~~~~~~~~~~~~~~~~~~~~~~~~~
 DB.getExpiredIds(function() {
-  console.log(arguments);
+  console.log(arguments[1]);
 });
 const Routes = require('./lib/routes');
-// ----------------
+// ---------------------------
 var ExpiringUploads = {
   storage: '/expiring_uploads/', // relative to nconf.get('base_dir')
   expiringTypes: [],
