@@ -7,7 +7,7 @@
     "email": "rbeerdev@gmail.com"
   },
   "dependencies": {
-    "xxhash": "^0.2.2"
+    "xxhash": "^0.2.3"
   },
   "main": "expups_be.js",
   "repository": {
@@ -31,5 +31,11 @@
   ],
   "nbbpm": {
     "compatibility": "^0.7.0"
+  },
+  "scripts": {
+    "build-docs": "./docit"
+  },
+  "devDependencies": {
+    "minami": "^1.1.1"
   }
 }
