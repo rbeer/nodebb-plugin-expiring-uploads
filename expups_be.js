@@ -180,28 +180,6 @@ ExpiringUploads.saveFile = function(src, dest, cb) {
   is.pipe(os);
 };
 
-ExpiringUploads.writeToDB = function(uploadData, cb) {
-  async.waterfall([
-    function(next) {
-      db.incrObjectField('settings:expiring-uploads', 'lastID', next);
-    },
-    function(id, next) {
-      db.sortedSetAdd('expiring-uploads:ids', uploadData.expTstamp, id, function() {
-        return next(null, id);
-      });
-    },
-    function(id, next) {
-      db.setObject('expiring-uploads:' + id, uploadData, next);
-    }
-  ],
-  function(err) {
-    if (err) {
-      return cb(err);
-    }
-  });
-  return cb();
-};
-
 ExpiringUploads.resolveRequest = function(req, res, cb) {
   var hash = req.params.hash;
   // timestamp comes in as hex string
