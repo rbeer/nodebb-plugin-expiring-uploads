@@ -19,6 +19,7 @@ const DB = require('./lib/dbwrap');
 DB.getExpiredIds(function() {
   console.log(arguments);
 });
+const Routes = require('./lib/routes');
 // ----------------
 var ExpiringUploads = {
   storage: '/expiring_uploads/', // relative to nconf.get('base_dir')
@@ -51,12 +52,8 @@ ExpiringUploads.init = function(app, cb) {
     if (err) {
       return cb(err);
     }
-    // route to catch file requests
-    app.router.get(nconf.get('upload_url') + ':hash/:tstamp/:fname',
-                   app.middleware.buildHeader,
-                   ExpiringUploads.resolveRequest);
-    app.router.get('/api/' + nconf.get('upload_url') + ':hash/:tstamp/:fname',
-                   ExpiringUploads.resolveRequest);
+    Routes.setFileRequests(app.router, app.middleware);
+
     // set interval for deleting files, when set
     if (settings.deleteFiles && settings.expireAfter > 0) {
       filehandler.startFileDelete();
