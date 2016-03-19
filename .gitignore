@@ -6,4 +6,6 @@ node_modules/
 snaps/
 .atom-build.json
 .eslintrc
-out/
+.jsdoc
+docit
+docs/
