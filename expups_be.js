@@ -1,6 +1,6 @@
 'use strict';
 
-var fs = require('fs')
+var fs = require('fs');
 var path = require('path');
 var xxh = require('xxhash');
 var nconf = require.main.require('nconf');
@@ -11,9 +11,15 @@ var utils = require.main.require('./public/src/utils');
 var meta = require.main.require('./src/meta');
 var validator = require.main.require('validator');
 var file = require.main.require('./src/file');
-
+// -------------
 const settings = require('./lib/settings');
-
+const FileHandler = require('./lib/filehandler');
+const filehandler = new FileHandler();
+const DB = require('./lib/dbwrap');
+DB.getExpiredIds(function() {
+  console.log(arguments);
+});
+// ----------------
 var ExpiringUploads = {
   storage: '/expiring_uploads/', // relative to nconf.get('base_dir')
   expiringTypes: [],
@@ -28,31 +34,6 @@ var ExpiringUploads = {
 ExpiringUploads.init = function(app, cb) {
   async.series([
     function(next) {
-      // get config or create if none found
-      db.getObject('settings:expiring-uploads', function(err, config) {
-        if (err || !config || !config.storage) {
-          config = {
-            storage: ExpiringUploads.storage,
-            expireAfter: ExpiringUploads.expireAfter,
-            expiringTypes: ExpiringUploads.expiringTypes,
-            delFiles: ExpiringUploads.delFiles,
-            linkText: ExpiringUploads.linkText,
-            setLinkText: ExpiringUploads.setLinkText,
-            lastID: '0'
-          };
-          db.setObject('settings:expiring-uploads', config);
-        } else {
-          ExpiringUploads.storage = config.storage;
-          ExpiringUploads.expireAfter = parseInt(config.expireAfter, 10);
-          ExpiringUploads.expiringTypes = config.expiringTypes.split(',');
-          ExpiringUploads.delFiles = (config.delFiles === 'true');
-          ExpiringUploads.linkText = config.linkText;
-          ExpiringUploads.setLinkText = (config.setLinkText === 'true');
-        }
-        next();
-      });
-    },
-    function(next) {
       // everything in /public is out of the question, since it is
       // automatically exposed to the public (hence the name - maybe? ^_^)
       var pubTestPath = nconf.get('base_dir') + '/public';
@@ -65,7 +46,7 @@ ExpiringUploads.init = function(app, cb) {
       next();
     },
     function(next) {
-      ExpiringUploads.createStorage(next);
+      FileHandler.createStorage(next);
     }], function(err) {
     if (err) {
       return cb(err);
@@ -77,90 +58,20 @@ ExpiringUploads.init = function(app, cb) {
     app.router.get('/api/' + nconf.get('upload_url') + ':hash/:tstamp/:fname',
                    ExpiringUploads.resolveRequest);
     // set interval for deleting files, when set
-    if (ExpiringUploads.delFiles && ExpiringUploads.expireAfter > 0) {
-      ExpiringUploads.setDelInterval();
+    if (settings.deleteFiles && settings.expireAfter > 0) {
+      filehandler.startFileDelete();
     }
     // init admin
     ExpiringUploads.Admin.init(app, cb);
   });
 };
 
-ExpiringUploads.setDelInterval = function() {
-  winston.info('[plugins:expiring-uploads] ' +
-               'Scheduled deleting expired files every ' +
-               (ExpiringUploads.expireAfter / 1000) + ' seconds');
-  ExpiringUploads.delInterval = setInterval(ExpiringUploads.deleteExpiredFiles,
-                                            ExpiringUploads.expireAfter);
-};
-
-ExpiringUploads.clearDelInterval = function() {
-  clearInterval(ExpiringUploads.delInterval);
-  ExpiringUploads.delInterval = undefined;
-};
-
 ExpiringUploads.deleteExpiredFiles = function() {
   async.waterfall([
-    function(next) {
-      // get ids for expired uploads
-      db.getSortedSetRangeByScoreWithScores('expiring-uploads:ids', 0, -1,
-                                            1, Date.now(), next);
-    },
-    function(fileIds, next) {
-      // no expired files; exit
-      if (fileIds.length === 0) {
-        var err = new RangeError('No expired uploads found.');
-        err.code = 'ENOEXP';
-        return next(err);
-      }
-      // get filenames of expired files
-      var keys = fileIds.map((id) => 'expiring-uploads:' + id.value);
-      db.getObjectsFields(keys, ['fileName'], function(err, files) {
-        if (err) {
-          return next(err);
-        }
-        next(null, fileIds, keys, files);
-      });
-    },
-    function(fileIds, keys, files, next) {
-      // delete files in fs
-      async.each(files, function(file, cb) {
-        var filePath = path.join(nconf.get('base_dir'),
-                                 ExpiringUploads.storage, file.fileName);
-        fs.unlink(filePath, function(err) {
-          if (err) {
-            if (err.code === 'ENOENT') {
-              // no reason to panic, if file is not found
-              winston.warn('[plugins:expiring-uploads] Couldn\'t delete ' +
-                           filePath + ' [Not found]');
-            } else {
-              // everything else could be a serious problem; abort
-              cb(err);
-              return next(err);
-            }
-          } else {
-            winston.verbose('[plugins:expiring-uploads] Deleted ' + filePath);
-          }
-          cb();
-        });
-      }, function(err) {
-        if (err) {
-          return winston.warn(err);
-        }
-      });
-      next(null, fileIds, keys);
-    },
-    function(fileIds, keys, next) {
-      async.each(keys, (key, cb) => {
-        db.setObjectField(key, 'expired', true, () => {
-          let data = fileIds.reduce((arrays, fileId) => {
-            arrays.scores.push(0);
-            arrays.values.push(fileId['value']);
-            return arrays;
-          }, {scores: [], values: []});
-          db.sortedSetAdd('expiring-uploads:ids', data['scores'], data['values'], cb);
-        });
-      }, err => err ? winston.warn(err) : next());
-    }
+    DB.getExpiredIds,
+    DB.getExpiringFiles,
+    FileHandler.deleteFiles,
+    DB.setFilesDeleted
   ], function(err, keys) {
     if (err) {
       if (err.code === 'ENOEXP') {
@@ -170,28 +81,6 @@ ExpiringUploads.deleteExpiredFiles = function() {
                     'Error while deleting expired files');
       winston.error(err);
     }
-  });
-};
-
-ExpiringUploads.createStorage = function(cb) {
-  var absPath = nconf.get('base_dir') + ExpiringUploads.storage;
-  // create 'storage' directory
-  fs.mkdir(absPath, function(err) {
-    if (err) {
-      if (err.code === 'EEXIST') {
-        // if folder exists, we're good.
-        // could become a point to do some cleanup, though.
-        return cb();
-      } else {
-        // unexpected error; scream panic back into the log ;)
-        winston.error('[plugin:expiring-uploads] Unexpected error while ' +
-                      'creating ' + absPath);
-        return cb(err);
-      }
-    }
-    winston.warn('[plugin:expiring-uploads] Storage folder \'' +
-                    absPath + '\' not found. Created it.');
-    cb();
   });
 };
 
@@ -213,7 +102,7 @@ ExpiringUploads.handleUpload = function(data, cb) {
       origName: data.file.name,
       expTstamp: expTstamp,
       hash: ExpiringUploads.getHash(data),
-      expired: false,
+      deleted: false,
       uid: data.uid
     };
 
@@ -370,6 +259,11 @@ ExpiringUploads.sendError = function(req, res, errCode) {
   // res.locals.isPlugin = true;
   res.status(parseInt(errCode, 10));
   res.render(tpl, {path: req.path});
+};
+
+ExpiringUploads.reload = function(data, cb) {
+  settings.persist();
+  cb(null);
 };
 
 module.exports = ExpiringUploads;
