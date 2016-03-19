@@ -1,13 +1,10 @@
 'use strict';
 
 var fs = require('fs');
-var path = require('path');
-var xxh = require('xxhash');
 var nconf = require.main.require('nconf');
 var winston = require.main.require('winston');
 var async = require.main.require('async');
 var db = require.main.require('./src/database');
-var utils = require.main.require('./public/src/utils');
 var meta = require.main.require('./src/meta');
 var validator = require.main.require('validator');
 var file = require.main.require('./src/file');
@@ -17,33 +14,28 @@ const FileHandler = require('./lib/filehandler');
 const filehandler = new FileHandler();
 const DB = require('./lib/dbwrap');
 // ~~~~~~~~~~~~~~~~~~~~~~~~~~~
-DB.getExpiredIds(function() {
+/*DB.getExpiredIds(function() {
   console.log(arguments[1]);
-});
+});*/
 const Routes = require('./lib/routes');
 // ---------------------------
 var ExpiringUploads = {
-  storage: '/expiring_uploads/', // relative to nconf.get('base_dir')
-  expiringTypes: [],
-  expireAfter: 0,
-  delFiles: false,
-  delInterval: undefined,
-  linkText: '',
-  setLinkText: false,
   Admin: require('./expups_admin')
 };
 
+const logTag = (strings) => '[plugin:expiring-uploads]' + strings[0];
+
 ExpiringUploads.init = function(app, cb) {
   async.series([
+    settings,
     function(next) {
+      winston.info(logTag` Settings loaded.`);
       // everything in /public is out of the question, since it is
       // automatically exposed to the public (hence the name - maybe? ^_^)
       var pubTestPath = nconf.get('base_dir') + '/public';
-      if (ExpiringUploads.storage.indexOf(pubTestPath) > -1) {
-        winston.error('[plugin:expiring-uploads] Upload directory is ' +
-                      'publicly accessible. Refusing to activate plugin!');
-        return next(new Error('Public directory \'' + pubTestPath +
-                              '\' not allowed as storage.'));
+      if (settings().storage.indexOf(pubTestPath) > -1) {
+        winston.error(logTag` Upload directory is publicly accessible. Refusing to activate plugin!`);
+        return next(new Error(`Public directory '${pubTestPath}' not allowed as storage.`));
       }
       next();
     },
@@ -54,7 +46,7 @@ ExpiringUploads.init = function(app, cb) {
       return cb(err);
     }
     Routes.setFileRequests(app.router, app.middleware);
-
+    Routes.setFileUpload(app.router, app.middleware);
     // set interval for deleting files, when set
     if (settings.deleteFiles && settings.expireAfter > 0) {
       filehandler.startFileDelete();
@@ -82,75 +74,7 @@ ExpiringUploads.deleteExpiredFiles = function() {
   });
 };
 
-ExpiringUploads.handleUpload = function(data, cb) {
-  if (!ExpiringUploads.checkPermissions(data, cb)) {
-    return;
-  }
-  if (ExpiringUploads.expiringTypes.indexOf(path.extname(data.file.name)) > -1) {
-    var expTstamp = Date.now() + ExpiringUploads.expireAfter;
-    // only used for the link; all internals use the numeric expTstamp
-    var hexTstamp = expTstamp.toString(16);
 
-    var filename = data.file.name.split('.');
-    filename.map((name) => utils.slugify(name));
-    filename = filename.join('.');
-    filename = validator.escape(filename).substr(0, 255);
-    var uploadData = {
-      fileName: expTstamp + '-' + filename,
-      origName: data.file.name,
-      expTstamp: expTstamp,
-      hash: ExpiringUploads.getHash(data),
-      deleted: false,
-      uid: data.uid
-    };
-
-    async.parallel({
-      fs: function(next) {
-        ExpiringUploads.saveFile(data.file.path, uploadData.fileName, next);
-      },
-      db: function(next) {
-        ExpiringUploads.writeToDB(uploadData, next);
-      }
-    }, function(err) {
-      if (err) {
-        return cb(err);
-      }
-      cb(null, {
-        url: nconf.get('upload_url') + uploadData.hash + '/' + hexTstamp +
-             '/' + uploadData.fileName.substring(14),
-        name: data.file.name
-      });
-    });
-  } else {
-    ExpiringUploads.doStandard(data, cb);
-  }
-};
-
-ExpiringUploads.getHash = function(uploadData) {
-  // key is generated from 'NodeBB secret'
-  var key = nconf.get('secret');
-  key = parseInt('0x' + key.substring(0, key.indexOf('-')), 16);
-  return xxh.hash(new Buffer(JSON.stringify(uploadData)), key).toString(16);
-};
-
-ExpiringUploads.checkPermissions = function(data, cb) {
-  if (parseInt(meta.config.allowFileUploads, 10) !== 1) {
-    cb(new Error('[[error:uploads-are-disabled]]'));
-    return false;
-  }
-
-  if (!data.file) {
-    cb(new Error('[[error:invalid-file]]'));
-    return false;
-  }
-
-  if (data.file.size > parseInt(meta.config.maximumFileSize, 10) * 1024) {
-    cb(new Error('[[error:file-too-big, ' +
-                 meta.config.maximumFileSize + ']]'));
-    return false;
-  }
-  return true;
-};
 
 ExpiringUploads.doStandard = function(data, cb) {
   var filename = data.file.name || 'upload';
