@@ -74,8 +74,6 @@ ExpiringUploads.deleteExpiredFiles = function() {
   });
 };
 
-
-
 ExpiringUploads.doStandard = function(data, cb) {
   var filename = data.file.name || 'upload';
 
@@ -151,14 +149,6 @@ ExpiringUploads.resolveRequest = function(req, res, cb) {
         ExpiringUploads.sendError(req, res, '404');
       }
     });
-};
-
-ExpiringUploads.sendError = function(req, res, errCode) {
-  // 403 Forbidden, 404 Not Found, 410 Gone
-  var tpl = (errCode === '404') ? '404' : 'expiring-uploads_' + errCode;
-  // res.locals.isPlugin = true;
-  res.status(parseInt(errCode, 10));
-  res.render(tpl, {path: req.path});
 };
 
 ExpiringUploads.reload = function(data, cb) {
