@@ -12,9 +12,7 @@ const filehandler = new FileHandler();
 const DB = require('./lib/dbwrap');
 const logTag = require('./lib/logtag');
 // ~~~~~~~~~~~~~~~~~~~~~~~~~~~
-/*DB.getExpiredIds(function() {
-  console.log(arguments[1]);
-});*/
+DB.getExpiredIds(DB.getExpiringFiles);
 const Routes = require('./lib/routes');
 // ---------------------------
 var ExpiringUploads = {
@@ -23,27 +21,23 @@ var ExpiringUploads = {
 
 ExpiringUploads.init = function(app, cb) {
   async.series([
+    // init settings
     settings,
-    function(next) {
-      winston.info(logTag` Settings loaded.`);
-      // everything in /public is out of the question, since it is
-      // automatically exposed to the public (hence the name - maybe? ^_^)
-      var pubTestPath = nconf.get('base_dir') + '/public';
-      if (settings().storage.indexOf(pubTestPath) > -1) {
-        winston.error(logTag` Upload directory is publicly accessible. Refusing to activate plugin!`);
-        return next(new Error(`Public directory '${pubTestPath}' not allowed as storage.`));
+    // setup storage
+    FileHandler.checkPublicStorage,
+    FileHandler.createStorage,
+    function setupRoutes(next) {
+      try {
+        Routes.setFileRequests(app.router, app.middleware);
+        Routes.setFileUpload(app.router, app.middleware);
+        next();
+      } catch (err) {
+        next(err);
       }
-      next();
-    },
-    function(next) {
-      FileHandler.createStorage(next);
-    }], function(err) {
-    if (err) {
-      return cb(err);
     }
-    Routes.setFileRequests(app.router, app.middleware);
-    Routes.setFileUpload(app.router, app.middleware);
-    // set interval for deleting files, when set
+  ], (err) => {
+    if (err) return cb(err);
+    // set interval for deleting files
     if (settings.deleteFiles && settings.deleteFilesInterval > 0 && settings.expireAfter > 0) {
       filehandler.startFileDelete();
     }
