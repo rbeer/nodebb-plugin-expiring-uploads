@@ -90,16 +90,6 @@ ExpiringUploads.doStandard = function(data, cb) {
                        });
 };
 
-ExpiringUploads.saveFile = function(src, dest, cb) {
-  var is = fs.createReadStream(src);
-  var os = fs.createWriteStream(nconf.get('base_dir') +
-                                ExpiringUploads.storage + dest);
-
-  is.on('end', cb);
-  os.on('error', cb);
-  is.pipe(os);
-};
-
 ExpiringUploads.resolveRequest = function(req, res, cb) {
   var hash = req.params.hash;
   // timestamp comes in as hex string
