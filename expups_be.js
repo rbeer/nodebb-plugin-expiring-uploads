@@ -1,18 +1,16 @@
 'use strict';
 
-var fs = require('fs');
 var nconf = require.main.require('nconf');
 var winston = require.main.require('winston');
 var async = require.main.require('async');
 var db = require.main.require('./src/database');
 var meta = require.main.require('./src/meta');
-var validator = require.main.require('validator');
-var file = require.main.require('./src/file');
 // ---------------------------
 const settings = require('./lib/settings');
 const FileHandler = require('./lib/filehandler');
 const filehandler = new FileHandler();
 const DB = require('./lib/dbwrap');
+const logTag = require('./lib/logtag');
 // ~~~~~~~~~~~~~~~~~~~~~~~~~~~
 /*DB.getExpiredIds(function() {
   console.log(arguments[1]);
@@ -22,8 +20,6 @@ const Routes = require('./lib/routes');
 var ExpiringUploads = {
   Admin: require('./expups_admin')
 };
-
-const logTag = (strings) => '[plugin:expiring-uploads]' + strings[0];
 
 ExpiringUploads.init = function(app, cb) {
   async.series([
@@ -48,7 +44,7 @@ ExpiringUploads.init = function(app, cb) {
     Routes.setFileRequests(app.router, app.middleware);
     Routes.setFileUpload(app.router, app.middleware);
     // set interval for deleting files, when set
-    if (settings.deleteFiles && settings.expireAfter > 0) {
+    if (settings.deleteFiles && settings.deleteFilesInterval > 0 && settings.expireAfter > 0) {
       filehandler.startFileDelete();
     }
     // init admin
@@ -65,29 +61,12 @@ ExpiringUploads.deleteExpiredFiles = function() {
   ], function(err, keys) {
     if (err) {
       if (err.code === 'ENOEXP') {
-        return winston.info('[plugins:expiring-uploads] ' + err.message);
+        return winston.info(logTag`${err.message}`);
       }
-      winston.error('[plugins:expiring-uploads] ' +
-                    'Error while deleting expired files');
+      winston.error(logTag`Error while deleting expired files`);
       winston.error(err);
     }
   });
-};
-
-ExpiringUploads.doStandard = function(data, cb) {
-  var filename = data.file.name || 'upload';
-
-  filename = Date.now() + '-' + validator.escape(filename).substr(0, 255);
-  file.saveFileToLocal(filename, 'files', data.file.path,
-                       function(err, upload) {
-                         if (err) {
-                           return cb(err);
-                         }
-                         cb(null, {
-                           url: nconf.get('relative_path') + upload.url,
-                           name: data.file.name
-                         });
-                       });
 };
 
 ExpiringUploads.resolveRequest = function(req, res, cb) {
