@@ -1,0 +1,6 @@
+.fa-clock-upload:before {
+  content: "\f093\f017";
+}
+.modal[aria-labelledby="upload-file"] {
+  z-index: 10010;
+}
