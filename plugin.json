@@ -13,7 +13,6 @@
   "staticDirs": {"scripts": "static/scripts/", "css": "static/css/"},
   "hooks": [
     { "hook": "filter:admin.header.build", "method": "Admin.addMenuItem" },
-    { "hook": "filter:uploadFile", "method": "handleUpload" },
     { "hook": "static:app.load", "method": "init" },
     { "hook": "static:app.reload", "method": "reload" }
   ]
