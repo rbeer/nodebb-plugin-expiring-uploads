@@ -1,18 +1,13 @@
 'use strict';
 
-var nconf = require.main.require('nconf');
-var winston = require.main.require('winston');
 var async = require.main.require('async');
-var db = require.main.require('./src/database');
-var meta = require.main.require('./src/meta');
+
 // ---------------------------
 const settings = require('./lib/settings');
 const FileHandler = require('./lib/filehandler');
-var filehandler;
-const DB = require('./lib/dbwrap');
-const logTag = require('./lib/logtag');
-// ~~~~~~~~~~~~~~~~~~~~~~~~~~~
+var deleteScheduler;
 const Routes = require('./lib/routes');
+// ~~~~~~~~~~~~~~~~~~~~~~~~~~~
 // ---------------------------
 var ExpiringUploads = {
   Admin: require('./expups_admin')
@@ -22,11 +17,6 @@ ExpiringUploads.init = function(app, cb) {
   async.series([
     // init settings
     settings,
-    // init filehandler (i.e. create an instance to schedule deletion)
-    (next) => {
-      filehandler = new FileHandler();
-      next();
-    },
     // setup storage
     FileHandler.checkPublicStorage,
     FileHandler.createStorage,
@@ -41,81 +31,14 @@ ExpiringUploads.init = function(app, cb) {
     }
   ], (err) => {
     if (err) return cb(err);
+    deleteScheduler = new FileHandler();
     // set interval for deleting files
-    if (settings.deleteFiles && settings.deleteFilesInterval > 0 && settings.expireAfter > 0) {
-      filehandler.startFileDelete();
+    if (settings().deleteFiles && settings().deleteFilesInterval > 0 && settings().expireAfter > 0) {
+      deleteScheduler.startFileDelete();
     }
     // init admin
     ExpiringUploads.Admin.init(app, cb);
   });
-};
-
-ExpiringUploads.deleteExpiredFiles = function() {
-  async.waterfall([
-    DB.getExpiredIds,
-    DB.getExpiringFiles,
-    FileHandler.deleteFiles,
-    DB.setFilesDeleted
-  ], function(err, keys) {
-    if (err) {
-      if (err.code === 'ENOEXP') {
-        return winston.info(logTag`${err.message}`);
-      }
-      winston.error(logTag`Error while deleting expired files`);
-      winston.error(err);
-    }
-  });
-};
-
-ExpiringUploads.resolveRequest = function(req, res, cb) {
-  var hash = req.params.hash;
-  // timestamp comes in as hex string
-  var tstamp = parseInt('0x' + req.params.tstamp, 16);
-  var fname = req.params.fname;
-
-  // return when downloading files requires to be logged in
-  if (parseInt(meta.config.privateUploads, 10) === 1 && !req.user) {
-    return ExpiringUploads.sendError(req, res, '403');
-  }
-  // return when file (according to request url) is expired.
-  // the url could be wrong, but then it's up for grabs, anyway :)
-  if (ExpiringUploads.expireAfter !== 0 && Date.now() > tstamp) {
-    return ExpiringUploads.sendError(req, res, '410');
-  }
-  async.waterfall([
-    function(next) {
-      // get ID of upload
-      db.getSortedSetRevRangeByScore('expiring-uploads:ids', 0, 1,
-                                     tstamp, tstamp, next);
-    },
-    function(id, next) {
-      if (id.length === 0) {
-        return ExpiringUploads.sendError(req, res, '404');
-      }
-      // get upload info to perform checks
-      db.getObject('expiring-uploads:' + id[0], next);
-    }], function(err, fields) {
-      if (err) {
-        return cb(err);
-      }
-      if (!fields) {
-        console.log('no fields');
-        return ExpiringUploads.sendError(req, res, '410');
-      }
-      var hashMatch = (fields.hash === hash);
-      var timeMatch = (parseInt(fields.expTstamp, 10) === tstamp);
-      var nameMatch = (fields.fileName.toLowerCase() === tstamp + '-' + fname);
-      if (hashMatch && timeMatch && nameMatch) {
-        res.status(200);
-        // http://www.w3.org/Protocols/rfc2616/rfc2616-sec19.html#sec19.5.1
-        res.setHeader('Content-Disposition', 'attachement; filename="' +
-                                             fields.origName + '"');
-        res.sendFile(nconf.get('base_dir') + ExpiringUploads.storage +
-                     fields.fileName);
-      } else {
-        ExpiringUploads.sendError(req, res, '404');
-      }
-    });
 };
 
 ExpiringUploads.reload = function(data, cb) {
