@@ -8,11 +8,10 @@ var meta = require.main.require('./src/meta');
 // ---------------------------
 const settings = require('./lib/settings');
 const FileHandler = require('./lib/filehandler');
-const filehandler = new FileHandler();
+var filehandler;
 const DB = require('./lib/dbwrap');
 const logTag = require('./lib/logtag');
 // ~~~~~~~~~~~~~~~~~~~~~~~~~~~
-DB.getExpiredIds(DB.getExpiringFiles);
 const Routes = require('./lib/routes');
 // ---------------------------
 var ExpiringUploads = {
@@ -23,6 +22,11 @@ ExpiringUploads.init = function(app, cb) {
   async.series([
     // init settings
     settings,
+    // init filehandler (i.e. create an instance to schedule deletion)
+    (next) => {
+      filehandler = new FileHandler();
+      next();
+    },
     // setup storage
     FileHandler.checkPublicStorage,
     FileHandler.createStorage,
@@ -115,7 +119,7 @@ ExpiringUploads.resolveRequest = function(req, res, cb) {
 };
 
 ExpiringUploads.reload = function(data, cb) {
-  settings.persist();
+  settings().persist();
   cb(null);
 };
 
