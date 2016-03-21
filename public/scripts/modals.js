@@ -19,7 +19,7 @@
           fileSize: ajaxify.data.maximumProfileImageSize,
           title: '[[user:upload_picture]]',
           description: '[[user:upload_a_picture]]',
-          accept: settings.accept
+          accept: settings.expiringTypes
         }, (response) => controller.validateUpload(response, composer));
       });
     };

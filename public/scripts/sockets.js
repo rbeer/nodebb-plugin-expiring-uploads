@@ -5,7 +5,10 @@ define('plugins/expiring-uploads/sockets', () => {
 
   var sockets = {};
 
+  sockets.settingsCache = null;
+
   sockets.getUploadModalSettings = (cb) => {
+    if (sockets.settingsCache) return cb(null, sockets.settingsCache);
     socket.emit('admin.settings.get', {
       hash: 'expiring-uploads'
     }, (err, values) => {
@@ -14,9 +17,10 @@ define('plugins/expiring-uploads/sockets', () => {
       }
       try {
         let settings = JSON.parse(values._);
-        return cb(null, {
-          accept: settings.expiringTypes.join(',')
-        });
+        sockets.settingsCache = {
+          expiringTypes: settings.expiringTypes.join(',')
+        };
+        return cb(null, sockets.settingsCache);
       } catch (e) {
         return cb(e);
       }
