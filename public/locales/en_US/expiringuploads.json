@@ -1,0 +1,8 @@
+{
+  "410.title": "Gone",
+  "410.message": "You are trying to download a file that had been flagged to expire. Unfortunately, it already has.",
+  "403.title": "Access Denied",
+  "403.message": "Please register/log in to download this file!",
+  "modal.title": "Upload expiring file",
+  "modal.description": "Files uploaded with this dialog will become unavailable, starting "
+}
