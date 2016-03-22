@@ -1,22 +1,22 @@
 /* global define socket */
 
-define('plugins/expiring-uploads/sockets', () => {
+define('plugins/expiring-uploads/sockets', function() {
   'use strict';
 
   var sockets = {};
 
   sockets.settingsCache = null;
 
-  sockets.getUploadModalSettings = (cb) => {
+  sockets.getUploadModalSettings = function(cb) {
     if (sockets.settingsCache) return cb(null, sockets.settingsCache);
     socket.emit('admin.settings.get', {
       hash: 'expiring-uploads'
-    }, (err, values) => {
+    }, function(err, values) {
       if (err) {
         return cb(null);
       }
       try {
-        let settings = JSON.parse(values._);
+        var settings = JSON.parse(values._);
         sockets.settingsCache = {
           expiringTypes: settings.expiringTypes.join(','),
           expireAfter: settings.expireAfter
@@ -28,4 +28,5 @@ define('plugins/expiring-uploads/sockets', () => {
     });
   };
   return sockets;
+
 });

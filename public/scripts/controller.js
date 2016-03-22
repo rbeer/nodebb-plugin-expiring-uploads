@@ -1,15 +1,17 @@
 /* global define */
 
-(() => {
+(function() {
   'use strict';
-  let deps = [
+
+  var deps = [
     'composer/controls'
   ];
-  define('plugins/expiring-uploads/controller', deps, (controls) => {
+  define('plugins/expiring-uploads/controller', deps, function(controls) {
+  
     var controller = {};
-    controller.validateUpload = (response, composer) => {
-      let selAfterInsert = 0;
-      let insertText = '';
+    controller.validateUpload = function(response, composer) {
+      var selAfterInsert = 0;
+      var insertText = '';
       if (composer.selectionStart === composer.selectionEnd) {
         insertText = '[' + response.linkText + '](' + response.url + ')';
         selAfterInsert = composer.selectionEnd + insertText.length;
@@ -23,12 +25,13 @@
        * Modal timeout takes the focus from textarea if set too early
        * https://github.com/nodebb/nodebb/blob/master/public/src/modules/uploader.js#L85-L88
        */
-      setTimeout(() => controls.updateTextareaSelection(composer.textarea,
-                                                        selAfterInsert,
-                                                        selAfterInsert),
-                 1000);
+      setTimeout(function() {
+        controls.updateTextareaSelection(composer.textarea,
+                                         selAfterInsert,
+                                         selAfterInsert)
+      }, 1000);
     };
-
     return controller;
+
   });
 })();

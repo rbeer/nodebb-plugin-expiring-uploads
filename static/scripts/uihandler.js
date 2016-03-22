@@ -1,13 +1,15 @@
-'use strict';
 /* globals define, app, socket */
 
-((define, app, socket) => {
-  let deps = [
+(function() {
+  'use strict';
+
+  var deps = [
     'plugin/expiring-uploads/uielements',
     'plugin/expiring-uploads/settings/filetypes',
     'plugin/expiring-uploads/settings/time'
   ];
-  define('plugin/expiring-uploads/uihandler', deps, (UIElements, FileTypes, Time) => {
+  define('plugin/expiring-uploads/uihandler', deps, function(UIElements, FileTypes, Time) {
+
   /**
    * ---------------------------------------------------------------------------
    *                                 Settings Tab
@@ -32,7 +34,7 @@
         });
         this.value = this.defaultValue;
       } else {
-        let dwm = Time.toDaysWeeksMonths(parseInt(this.value, 10));
+        var dwm = Time.toDaysWeeksMonths(parseInt(this.value, 10));
         UIElements.settings.expMonths.value = (dwm.months <= 12) ? dwm.months : 13;
         UIElements.settings.expWeeks.value = (dwm.weeks <= 3) ? dwm.weeks : 0;
         UIElements.settings.expDays.value = (dwm.days <= 6) ? dwm.days : 0;
@@ -117,7 +119,9 @@
           alert_id: 'expiring-uploads-saved',
           title: 'Settings Saved',
           message: 'Please reload your NodeBB to apply these settings',
-          clickfn: () => socket.emit('admin.reload')
+          clickfn: function() {
+            socket.emit('admin.reload');
+          }
         });
       });
     };
@@ -136,7 +140,9 @@
     /**
      * User clicked clean button
      */
-    var clean = (a) => a;
+    // var clean = function(a) {
+    //   return a;
+    // };
 
     /**
      * UI Element handlers
@@ -150,9 +156,9 @@
      * @property {function} saveSettings          - Saves settings
      */
     return {
-      uploads: {
+      /*uploads: {
         clean: clean
-      },
+      },*/
       settings: {
         setCustomSeconds: setCustomSeconds,
         onTimeSelectChange: onTimeSelectChange,
@@ -163,5 +169,6 @@
         saveSettings: saveSettings
       }
     };
+
   }); // define
-})(define, app, socket);
+})();

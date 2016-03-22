@@ -1,9 +1,10 @@
 /* global config */
 
-require(['composer/formatting', 'plugins/expiring-uploads/modals'], (composer, modals) => {
+require(['composer/formatting', 'plugins/expiring-uploads/modals'], function(composer, modals) {
   'use strict';
+
   if (config.allowFileUploads) {
-    composer.addButton('fa fa-clock-upload', (textarea, selectionStart, selectionEnd) => {
+    composer.addButton('fa fa-clock-upload', function(textarea, selectionStart, selectionEnd) {
       modals.showUploadModal({
         textarea: textarea,
         selectionStart: selectionStart,
@@ -12,4 +13,5 @@ require(['composer/formatting', 'plugins/expiring-uploads/modals'], (composer, m
     });
     composer.addComposerButtons();
   }
+
 });

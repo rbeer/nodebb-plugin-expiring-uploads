@@ -1,23 +1,24 @@
 /* global config define */
 
-(() => {
+(function() {
   'use strict';
 
-  let deps = [
+  var deps = [
     'uploader',
     'translator',
     'plugins/expiring-uploads/controller',
     'plugins/expiring-uploads/sockets'
   ];
-  define('plugins/expiring-uploads/modals', deps, (uploader, translator, controller, sockets) => {
+  define('plugins/expiring-uploads/modals', deps, function(uploader, translator, controller, sockets) {
+
     var modals = {};
 
     modals.showUploadModal = function(composer) {
-      sockets.getUploadModalSettings((err, settings) => {
+      sockets.getUploadModalSettings(function(err, settings) {
         if (err) return console.error('Error getting settings from backend');
-        let translateKeys = '[[expiringuploads:modal.title]];[[expiringuploads:modal.description]]';
-        translator.translate(translateKeys, (translated) => {
-          let strings = translated.split(';');
+        var translateKeys = '[[expiringuploads:modal.title]];[[expiringuploads:modal.description]]';
+        translator.translate(translateKeys, function(translated) {
+          var strings = translated.split(';');
 
           (new MutationObserver(hoistModal)).observe(document.body, {childList: true});
 
@@ -29,32 +30,39 @@
             description: wrapDescription(strings[1] + '<br />' +
                                          expireString(settings.expireAfter)),
             accept: settings.expiringTypes
-          }, (response) => controller.validateUpload(response, composer));
+          }, function(response) {
+            controller.validateUpload(response, composer));
+          });
 
         });
       });
     };
 
-    const hoistModal = (mutations, observer) => {
-      let addedNodes = mutations.map((mutation) => mutation.addedNodes[0]);
-      let target = addedNodes.filter(targetNodeFilter)[0];
+    var hoistModal = function(mutations, observer) {
+      var addedNodes = mutations.map((mutation) {
+        return mutation.addedNodes[0]);
+      });
+      var target = addedNodes.filter(targetNodeFilter)[0];
       if (target) {
         target.classList.add('hoisted');
         observer.disconnect();
       }
-    }
-    const targetNodeFilter = (node) => {
+    };
+    var targetNodeFilter = function(node) {
       if (!node || !node.classList.contains('modal')) return false;
-      let aria = node.attributes.getNamedItem('aria-labelledby');
+      var aria = node.attributes.getNamedItem('aria-labelledby');
       return (aria || {value: 0}).value === 'upload-file';
     };
 
-    const expireString = (expireAfter) => {
+    var expireString = function(expireAfter) {
       expireAfter = (expireAfter * 1000) + Date.now();
       return new Date(expireAfter).toLocaleString(config.userLang);
-    }
-    const wrapDescription = (text) => '<div class="alert">' + text + '</div>';
+    };
+    var wrapDescription = function(text) {
+      '<div class="alert">' + text + '</div>';
+    };
 
     return modals;
+
   });
 })();

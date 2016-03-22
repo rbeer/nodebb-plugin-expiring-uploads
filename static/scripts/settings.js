@@ -1,12 +1,13 @@
-'use strict';
 /* globals define */
 
-((define) => {
-  let deps = [
+(function() {
+  'use strict';
+
+  var deps = [
     'plugin/expiring-uploads/uielements',
     'plugin/expiring-uploads/uihandler'
   ];
-  define('plugin/expiring-uploads/settings', deps, (UIElements, UIHandler) => {
+  define('plugin/expiring-uploads/settings', deps, function(UIElements, UIHandler) {
 
     var _hookMap = [
       ['expDays', 'change', 'onTimeSelectChange'],
@@ -29,9 +30,10 @@
       });
     };
     var _hookElements = function() {
-      _hookMap.forEach((hook) =>
-        UIElements.settings[hook[0]]
-        .addEventListener(hook[1], UIHandler.settings[hook[2]]));
+      _hookMap.forEach(function(hook) {
+        return UIElements.settings[hook[0]]
+               .addEventListener(hook[1], UIHandler.settings[hook[2]]));
+      });
     };
 
     _init();
@@ -39,5 +41,6 @@
       _uielements: UIElements.settings,
       _uihandler: UIHandler.settings
     };
+
   });
-})(define);
+})();

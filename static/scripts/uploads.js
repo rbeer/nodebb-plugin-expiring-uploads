@@ -1,14 +1,15 @@
-'use strict';
-
 /* global define */
 
-((define) => {
-  let deps = [
+(function() {
+  'use strict';
+
+  var deps = [
     'plugin/expiring-uploads/uielements',
     'plugin/expiring-uploads/uihandler',
     'plugin/expiring-uploads/uploads/table'
   ];
-  define('plugin/expiring-uploads/uploads', deps, (UIElements, UIHandler, Table) => {
+  define('plugin/expiring-uploads/uploads', deps, function(UIElements, UIHandler, Table) {
+
     var dummyData = [
       {
         id: 20,
@@ -283,13 +284,13 @@
     };
 
     var _onTabLoad = function() {
-      let table = UIElements.uploads.tblUploads;
+      var table = UIElements.uploads.tblUploads;
       table.removeChild(table.querySelector('tbody'));
       table.appendChild(Table.loadTable(dummyData));
       this.removeEventListener('click', _onTabLoad);
     };
 
-    var _hookUploadsTab = () => {
+    var _hookUploadsTab = function() {
       document.querySelector('[aria-controls=uploads]')
       .addEventListener('click', _onTabLoad);
     };
@@ -306,5 +307,6 @@
       _uielements: UIElements.uploads,
       _uihandler: UIHandler.uploads
     };
+
   });
-})(define);
+})();
