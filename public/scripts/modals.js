@@ -1,4 +1,4 @@
-/* global config define ajaxify */
+/* global config define */
 
 (() => {
   'use strict';
@@ -16,7 +16,7 @@
         uploader.show({
           route: config.relative_path + '/plugins/expiring-uploads/upload',
           params: {},
-          fileSize: ajaxify.data.maximumProfileImageSize,
+          fileSize: config.maximumFileSize,
           title: '[[user:upload_picture]]',
           description: '[[user:upload_a_picture]]',
           accept: settings.expiringTypes
