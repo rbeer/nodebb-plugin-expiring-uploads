@@ -18,7 +18,8 @@ define('plugins/expiring-uploads/sockets', () => {
       try {
         let settings = JSON.parse(values._);
         sockets.settingsCache = {
-          expiringTypes: settings.expiringTypes.join(',')
+          expiringTypes: settings.expiringTypes.join(','),
+          expireAfter: settings.expireAfter
         };
         return cb(null, sockets.settingsCache);
       } catch (e) {

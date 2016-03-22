@@ -3,6 +3,6 @@
   "410.message": "Du versuchst eine Datei herunter zu laden, die mit einem Verfallsdatum markiert wurde. Leider ist dieser Zeitpunkt bereits ueberschritten.",
   "403.title": "Zugang Verweigert",
   "403.message": "Bitte registriere dich oder melde dich an, um diese Datei herunterzuladen!",
-  "modal.title": "Upload ablaufende Datei",
-  "modal.description": "Dateien, ueber diesen Dialog hochgeladen, sind nicht mehr abrufbar ab "
+  "modal.title": "Ablaufende Datei hochladen",
+  "modal.description": "Die hochgeladen Datei wird nicht mehr abrufbar sein ab "
 }
