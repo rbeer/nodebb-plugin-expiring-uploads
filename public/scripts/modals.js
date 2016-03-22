@@ -31,7 +31,7 @@
                                          expireString(settings.expireAfter)),
             accept: settings.expiringTypes
           }, function(response) {
-            controller.validateUpload(response, composer));
+            controller.validateUpload(response, composer);
           });
 
         });
@@ -39,8 +39,8 @@
     };
 
     var hoistModal = function(mutations, observer) {
-      var addedNodes = mutations.map((mutation) {
-        return mutation.addedNodes[0]);
+      var addedNodes = mutations.map(function(mutation) {
+        return mutation.addedNodes[0];
       });
       var target = addedNodes.filter(targetNodeFilter)[0];
       if (target) {
@@ -59,7 +59,7 @@
       return new Date(expireAfter).toLocaleString(config.userLang);
     };
     var wrapDescription = function(text) {
-      '<div class="alert">' + text + '</div>';
+      return '<div class="alert">' + text + '</div>';
     };
 
     return modals;

@@ -9,7 +9,7 @@ define('plugin/expiring-uploads/settings/filetypes', ['plugin/expiring-uploads/u
    */
   var types = Array.prototype.slice.call(UIElements.settings.lstFiletypes.options)
               .map(function(typeElement) {
-                return typeElement.value.substring(1)
+                return typeElement.value.substring(1);
               });
 
   /**

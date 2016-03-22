@@ -7,7 +7,7 @@
     'composer/controls'
   ];
   define('plugins/expiring-uploads/controller', deps, function(controls) {
-  
+
     var controller = {};
     controller.validateUpload = function(response, composer) {
       var selAfterInsert = 0;
@@ -28,7 +28,7 @@
       setTimeout(function() {
         controls.updateTextareaSelection(composer.textarea,
                                          selAfterInsert,
-                                         selAfterInsert)
+                                         selAfterInsert);
       }, 1000);
     };
     return controller;

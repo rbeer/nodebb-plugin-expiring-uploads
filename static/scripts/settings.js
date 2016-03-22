@@ -32,7 +32,7 @@
     var _hookElements = function() {
       _hookMap.forEach(function(hook) {
         return UIElements.settings[hook[0]]
-               .addEventListener(hook[1], UIHandler.settings[hook[2]]));
+               .addEventListener(hook[1], UIHandler.settings[hook[2]]);
       });
     };
 

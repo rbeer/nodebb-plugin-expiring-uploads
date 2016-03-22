@@ -1,4 +1,4 @@
-/* global define socket*/
+/* global define socket app */
 
 define('plugin/expiring-uploads/uploads/table', function() {
   'use strict';
@@ -142,8 +142,8 @@ define('plugin/expiring-uploads/uploads/table', function() {
   var addRows = function(fileData) {
     var tbody = document.createElement('tbody');
     fileData = fileData.sort(function(a, b) {
-      return a.id > b.id);
-    };
+      return a.id > b.id;
+    });
     for (var file of fileData) {
       var row = createRow(file);
       tbody.appendChild(row);
