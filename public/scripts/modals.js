@@ -56,7 +56,7 @@
 
     var expireString = function(expireAfter) {
       expireAfter = (expireAfter * 1000) + Date.now();
-      return new Date(expireAfter).toLocaleString(config.userLang);
+      return new Date(expireAfter).toLocaleString(config.userLang.replace('_', '-'));
     };
     var wrapDescription = function(text) {
       return '<div class="alert">' + text + '</div>';
