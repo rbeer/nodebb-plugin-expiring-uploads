@@ -1,17 +1,27 @@
 /* global config */
 
-require(['composer/formatting', 'plugins/expiring-uploads/modals'], function(composer, modals) {
-  'use strict';
+(function() {
 
-  if (config.allowFileUploads) {
-    composer.addButton('fa fa-clock-upload', function(textarea, selectionStart, selectionEnd) {
-      modals.showUploadModal({
-        textarea: textarea,
-        selectionStart: selectionStart,
-        selectionEnd: selectionEnd
-      });
+  var deps = [
+    'composer/formatting',
+    'plugins/expiring-uploads/modals',
+    'plugins/expiring-uploads/sockets'
+  ];
+  require(deps, function(composer, modals, sockets) {
+    'use strict';
+
+    sockets.getUploadModalSettings(function(settings) {
+      if (config.allowFileUploads && settings.expireAfter > 0) {
+        composer.addButton('fa fa-clock-upload', function(textarea, selectionStart, selectionEnd) {
+          modals.showUploadModal({
+            textarea: textarea,
+            selectionStart: selectionStart,
+            selectionEnd: selectionEnd
+          });
+        });
+        composer.addComposerButtons();
+      }
     });
-    composer.addComposerButtons();
-  }
 
-});
+  });
+})();
