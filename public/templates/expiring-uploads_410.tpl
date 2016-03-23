@@ -1,4 +1,4 @@
 <div class="alert alert-danger">
-	<strong>[[expups:410.title]] | {path}</strong>
-	<p>[[expups:410.message]]</p>
+	<strong>[[expiringuploads:410.title]] | {path}</strong>
+	<p>[[expiringuploads:410.message]]</p>
 </div>
