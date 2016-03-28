@@ -158,12 +158,12 @@
   </div>
 </div>
 
-<script type="text/javascript" src="{relative_path}/plugins/nodebb-plugin-expiring-uploads/scripts/admin/main.js"></script>
-<script type="text/javascript" src="{relative_path}/plugins/nodebb-plugin-expiring-uploads/scripts/admin/uploads.js"></script>
-<script type="text/javascript" src="{relative_path}/plugins/nodebb-plugin-expiring-uploads/scripts/admin/settings.js"></script>
-<script type="text/javascript" src="{relative_path}/plugins/nodebb-plugin-expiring-uploads/scripts/admin/settings/filetypes.js"></script>
-<script type="text/javascript" src="{relative_path}/plugins/nodebb-plugin-expiring-uploads/scripts/admin/settings/time.js"></script>
-<script type="text/javascript" src="{relative_path}/plugins/nodebb-plugin-expiring-uploads/scripts/admin/uielements.js"></script>
-<script type="text/javascript" src="{relative_path}/plugins/nodebb-plugin-expiring-uploads/scripts/admin/uihandler.js"></script>
-<script type="text/javascript" src="{relative_path}/plugins/nodebb-plugin-expiring-uploads/scripts/admin/uploads/table.js"></script>
+<script type="text/javascript" src="{relative_path}/plugins/nodebb-plugin-expiring-uploads/scripts/main.js"></script>
+<script type="text/javascript" src="{relative_path}/plugins/nodebb-plugin-expiring-uploads/scripts/uploads.js"></script>
+<script type="text/javascript" src="{relative_path}/plugins/nodebb-plugin-expiring-uploads/scripts/settings.js"></script>
+<script type="text/javascript" src="{relative_path}/plugins/nodebb-plugin-expiring-uploads/scripts/settings/filetypes.js"></script>
+<script type="text/javascript" src="{relative_path}/plugins/nodebb-plugin-expiring-uploads/scripts/settings/time.js"></script>
+<script type="text/javascript" src="{relative_path}/plugins/nodebb-plugin-expiring-uploads/scripts/uielements.js"></script>
+<script type="text/javascript" src="{relative_path}/plugins/nodebb-plugin-expiring-uploads/scripts/uihandler.js"></script>
+<script type="text/javascript" src="{relative_path}/plugins/nodebb-plugin-expiring-uploads/scripts/uploads/table.js"></script>
 <link rel="stylesheet" type="text/css" href="{relative_path}/plugins/nodebb-plugin-expiring-uploads/css/admin.css">
