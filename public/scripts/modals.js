@@ -31,7 +31,9 @@
             title: strings[0],
             description: wrapDescription(strings[1] + '<br />' +
                                          expireString(settings.expireAfter)),
-            accept: settings.expiringTypes
+            accept: settings.expiringTypes.map(function(type) {
+              return '.' + type;
+            }).join(',')
           }, function(response) {
             controller.validateUpload(response, composer);
           });
