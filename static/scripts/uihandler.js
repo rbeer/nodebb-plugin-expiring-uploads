@@ -100,7 +100,7 @@
      */
     var saveSettings = function(event) {
       event.preventDefault();
-      var ftypes = '.' + FileTypes.getAll().join(',.');
+      var ftypes = FileTypes.getAll();
       var data = {
         storage: UIElements.settings.storagePath.value,
         expireAfter: UIElements.settings.expTstamp.value,
