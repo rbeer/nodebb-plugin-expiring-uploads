@@ -15,7 +15,9 @@
 
     modals.showUploadModal = function(composer) {
       sockets.getUploadModalSettings(function(err, settings) {
-        if (err) return console.error('Error getting settings from backend');
+        if (err) {
+          return console.error('[plugin:expiring-uploads] Error getting settings');
+        }
         var translateKeys = '[[expiringuploads:modal.title]];[[expiringuploads:modal.description]]';
         translator.translate(translateKeys, function(translated) {
           var strings = translated.split(';');
