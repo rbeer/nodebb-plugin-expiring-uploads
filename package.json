@@ -37,5 +37,8 @@
   },
   "devDependencies": {
     "minami": "^1.1.1"
+  },
+  "engines": {
+    "node": ">=4.0.0"
   }
 }
