@@ -59,7 +59,7 @@
     };
 
     var expireString = function(expireAfter) {
-      expireAfter = (expireAfter * 1000) + Date.now();
+      expireAfter = expireAfter + Date.now();
       return new Date(expireAfter).toLocaleString(config.userLang.replace('_', '-'));
     };
     var wrapDescription = function(text) {
